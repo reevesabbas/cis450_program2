@@ -1,9 +1,34 @@
-import { useState } from "react";
+import { memo, useState } from "react";
+import { MemorySimulation } from "./Simulation";
 
 function App() {
-  const [processInput, setProcessInput] = useState("");
-  const [timeQuantumInput, setTimeQuantumInput] = useState(0);
+  const [jobAllocation, setJobAllocation] = useState("");
+  const [memoryUnitSize, setMemoryUnitSize] = useState(0);
+  const [numberOfUnits, setNumberOfUnits] = useState(0);
+  const [lostObjects, setLostObjects] = useState(false);
   const [completedInput, setCompletedInput] = useState(false);
+  const [simulation, setSimulation] = useState<MemorySimulation | null>(null);
+
+  const startSimulation = (
+    jobAllocation: string,
+    memoryUnitSize: number,
+    numberOfUnits: number,
+    lostObjects: boolean
+  ): void => {
+    const jobAllocations = jobAllocation.trim().split("\n");
+    const smallJobPercentage = parseInt(jobAllocations.shift()!);
+    const mediumJobPercentage = parseInt(jobAllocations.shift()!);
+    const largeJobPercentage = parseInt(jobAllocations.shift()!);
+    const newSimulation = new MemorySimulation(
+      smallJobPercentage,
+      mediumJobPercentage,
+      largeJobPercentage,
+      memoryUnitSize,
+      numberOfUnits,
+      lostObjects
+    );
+    setSimulation(newSimulation);
+  };
 
   return (
     <div className="flex-1 h-screen w-screen place-content-center bg-[#0c1227]">
@@ -15,31 +40,64 @@ function App() {
           <div className="flex justify-center">
             <div className="flex-col col-span-1">
               <div className="mb-1">
-                <label className="text-white">Enter Process Inputs</label>
+                <label className="text-white">Enter Job Allocations</label>
               </div>
               <textarea
                 onChange={(event) => {
-                  setProcessInput(event.target.value);
+                  setJobAllocation(event.target.value);
                 }}
                 className="bg-[#fdfdff] rounded-sm h-24 w-100 mb-5"
-                name={"TimeQuantumInput"}
+                name={"JobAllocation"}
                 required
               />
               <div className="mb-1">
-                <label className="text-white">Enter Time Quantum</label>
+                <label className="text-white">
+                  Enter Memory Unit Size (multiple of 8)
+                </label>
               </div>
               <input
                 onChange={(event) => {
-                  setTimeQuantumInput(parseInt(event.target.value));
+                  setMemoryUnitSize(parseInt(event.target.value));
                 }}
                 className="bg-[#fdfdff] rounded-sm"
-                name={"TimeQuantumInput"}
+                name={"MemoryUnitSize"}
+                type="number"
+                required
+              />
+              <div className="my-2">
+                <label className="text-white">Enter Number of Units</label>
+              </div>
+              <input
+                onChange={(event) => {
+                  setNumberOfUnits(parseInt(event.target.value));
+                }}
+                className="bg-[#fdfdff] rounded-sm"
+                name={"MemoryUnitSize"}
+                type="number"
+                required
+              />
+              <div className="my-2">
+                <label className="text-white">Allow Lost Objects?</label>
+              </div>
+              <input
+                onChange={(event) => {
+                  setLostObjects(event.target.checked);
+                }}
+                className="bg-[#fdfdff] rounded-sm"
+                name={"MemoryUnitSize"}
+                type="checkbox"
                 required
               />
               <div className="mt-10">
                 <button
                   className="bg-white p-2 rounded-sm"
                   onClick={() => {
+                    startSimulation(
+                      jobAllocation,
+                      memoryUnitSize,
+                      numberOfUnits,
+                      lostObjects
+                    );
                     setCompletedInput(true);
                   }}
                 >
