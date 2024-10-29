@@ -109,7 +109,21 @@ function App() {
         </>
       ) : (
         <>
-          <div className="w-full justify-center text-center text-white mb-5 whitespace-pre-wrap"></div>
+          <div className="w-full justify-center text-center text-white mb-5 whitespace-pre-wrap">
+            <div className="flex relative justify-items-center mx-auto w-[70%] h-[70%] bg-[#090c14] rounded-xl">
+              <button
+                className="absolute top-3 right-3 text-white text-2xl"
+                onClick={() => {
+                  setCompletedInput(false);
+                }}
+              >
+                X
+              </button>
+              <div className="flex w-full h-full p-2 overflow-scroll">
+                <div className="flex-col col-span-1">return log lines here</div>
+              </div>
+            </div>
+          </div>
         </>
       )}
     </div>
