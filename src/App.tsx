@@ -114,13 +114,16 @@ function App() {
               <button
                 className="absolute top-3 right-3 text-white text-2xl"
                 onClick={() => {
+                  simulation?.startSimulation();
                   setCompletedInput(false);
                 }}
               >
                 X
               </button>
               <div className="flex w-full h-full p-2 overflow-scroll">
-                <div className="flex-col col-span-1">return log lines here</div>
+                <div className="flex-col col-span-1">
+                  Map the simulation log lines here. Return in h1 tag with 'text-white' className
+                </div>
               </div>
             </div>
           </div>

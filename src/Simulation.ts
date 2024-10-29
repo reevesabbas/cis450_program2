@@ -26,6 +26,8 @@ class MemorySimulation {
   memoryUnitSize: number;
   numberOfUnits: number;
   includeLostObjects: boolean;
+  jobsQueue: Array<Job>;
+
 
   constructor(
     smallJobNum: number,
@@ -47,7 +49,9 @@ class MemorySimulation {
     return Math.floor(Math.random() * max) + min;
   }
 
-  public startSimulation(): void {}
+  public startSimulation(): void {
+ 
+  }
 }
 
 export { MemorySimulation };
