@@ -66,34 +66,73 @@ class MemorySimulation {
 
   }
 
-  public createSmallJob( currentJob: Job) {
-      currentJob.type = JobType.Small;
-      currentJob.codeSize = this.GenerateRandomNum(40,80);
-      currentJob.stackSize = this.GenerateRandomNum(20,40);
-      currentJob.runTime = this.GenerateRandomNum(4,6);
-
-      this.HeapGenerator(currentJob, 5);
+  public createSmallJob() {
       
+      let job : JobType = JobType.Small;
+      let code: number = this.GenerateRandomNum(40,80);
+      let stack: number = this.GenerateRandomNum(20,40);
+      let run: number = this.GenerateRandomNum(4,6);
+      let array: Array<HeapElement> = [];
+      
+
+      let currentJob: Job = {
+        type: job, 
+        codeSize: code, 
+        stackSize: stack, 
+        runTime: run, 
+        heapElements: array, 
+        arrivalTime: 0
+      }
+
+      this.HeapGenerator(currentJob, 5); 
+      return currentJob;
   }
 
-  public createMediumJob( currentJob: Job) {
-    currentJob.type = JobType.Medium;
-    currentJob.codeSize = this.GenerateRandomNum(60,120);
-    currentJob.stackSize = this.GenerateRandomNum(40,80);
-    currentJob.runTime = this.GenerateRandomNum(9,11);
-
-    this.HeapGenerator(currentJob, 10);
-  }
-
-  public createLargeJob( currentJob: Job) {
-    currentJob.type = JobType.Large;
-    currentJob.codeSize = this.GenerateRandomNum(120,220);
-    currentJob.stackSize = this.GenerateRandomNum(60,120);
-    currentJob.runTime = this.GenerateRandomNum(24,26);
-
-    this.HeapGenerator(currentJob, 15);
+  public createMediumJob() {
+      
+    let job : JobType = JobType.Medium;
+    let code: number = this.GenerateRandomNum(60,120);
+    let stack: number = this.GenerateRandomNum(40,80);
+    let run: number = this.GenerateRandomNum(9,11);
+    let array: Array<HeapElement> = [];
     
+
+    let currentJob: Job = {
+      type: job, 
+      codeSize: code, 
+      stackSize: stack, 
+      runTime: run, 
+      heapElements: array, 
+      arrivalTime: 0
+    }
+
+    this.HeapGenerator(currentJob, 10); 
+    return currentJob;
+}
+
+
+public createLargeJob() {
+      
+  let job : JobType = JobType.Large;
+  let code: number = this.GenerateRandomNum(120,220);
+  let stack: number = this.GenerateRandomNum(60,120);
+  let run: number = this.GenerateRandomNum(24,26);
+  let array: Array<HeapElement> = [];
+  
+
+  let currentJob: Job = {
+    type: job, 
+    codeSize: code, 
+    stackSize: stack, 
+    runTime: run, 
+    heapElements: array, 
+    arrivalTime: 0
   }
+
+  this.HeapGenerator(currentJob, 15); 
+  return currentJob;
+}
+
 
   public GenerateRandJobType () {
       let smallInterval: number = this.smallJobPercentage;
@@ -120,17 +159,28 @@ class MemorySimulation {
 
               case ("SMALL"):
                 console.log("SMALL");
+                let newJob: Job = this.createSmallJob();
+                newJob.arrivalTime = arrival;
+                this.jobsQueue.push(newJob);
+                
                 break;
               case ("MEDIUM"):
                 console.log("MEDIUM");
+                let newJobmed: Job = this.createMediumJob();
+                newJobmed.arrivalTime = arrival;
+                this.jobsQueue.push(newJobmed);
                 break;
               case ("LARGE"):
                 console.log("LARGE");
+                let newJoblg: Job = this.createLargeJob();
+                newJoblg.arrivalTime = arrival;
+                this.jobsQueue.push(newJoblg);
                 break;
               default:
                 console.log("SOMETHINGS WRONG");
                 break;
             }
+            arrival += this.GenerateRandomNum(1,5);
         }
   }
 }
