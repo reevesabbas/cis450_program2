@@ -65,7 +65,7 @@ function App() {
                 required
               />
               <div className="my-2">
-                <label className="text-white">Enter Number of Units</label>
+                <label className="text-white">Enter Total Memory Units</label>
               </div>
               <input
                 onChange={(event) => {
