@@ -28,6 +28,7 @@ function App() {
       lostObjects
     );
     setSimulation(newSimulation);
+    newSimulation.startSimulation();
   };
 
   return (
@@ -109,20 +110,21 @@ function App() {
         </>
       ) : (
         <>
-          <div className="w-full justify-center text-center text-white mb-5 whitespace-pre-wrap">
-            <div className="flex relative justify-items-center mx-auto w-[70%] h-[70%] bg-[#090c14] rounded-xl">
-              <button
-                className="absolute top-3 right-3 text-white text-2xl"
-                onClick={() => {
-                  simulation?.startSimulation();
-                  setCompletedInput(false);
-                }}
-              >
-                X
-              </button>
+          <div className="w-full justify-center text-white mb-5 whitespace-pre-wrap">
+            <div className="flex relative mx-auto w-[70%] h-[1000px] bg-[#090c14] rounded-xl">
+            <button
+              className="absolute top-3 right-3 text-white text-2xl"
+              onClick={() => {
+                setCompletedInput(false);
+              }}
+            >
+              X
+            </button>
               <div className="flex w-full h-full p-2 overflow-scroll">
                 <div className="flex-col col-span-1">
-                  Map the simulation log lines here. Return in h1 tag with 'text-white' className
+                  {simulation?.logLines.map((el) => {
+                    return <h1 className="text-white">{el}</h1>;
+                  })}
                 </div>
               </div>
             </div>

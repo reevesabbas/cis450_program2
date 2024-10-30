@@ -8,7 +8,7 @@ interface HeapElement {
   id: number;
   heapMemorySize: number;
   unitLifeTime: number;
-  heapMemoryUnit: number;
+  heapTimeUnit: number;
 }
 
 interface Job {
@@ -28,7 +28,8 @@ class MemorySimulation {
   memoryUnitSize: number;
   numberOfUnits: number;
   includeLostObjects: boolean;
-  jobsQueue: Array<Job>;
+  jobsQueue: Array<Job> = [];
+  logLines: Array<string> = [];
 
 
   constructor(
@@ -51,16 +52,16 @@ class MemorySimulation {
     return Math.floor(Math.random() * max) + min;
   }
 
-  public HeapGenerator( currentJob: Job, heapobjects: number) {
-      let i: number;
-      for (i = 0; i < heapobjects; i++) {
+  public HeapGenerator( currentJob: Job, heapObjects: number) {
+      for (let i: number = 1; i <= heapObjects; i++) {
         let randomHeap: number = this.GenerateRandomNum(20,50);
         let heapUnitSize: number = Math.ceil(randomHeap / 8);
+        let randomTimeUnit: number = this.GenerateRandomNum(currentJob.runTime - (currentJob.runTime - 1), currentJob.runTime)
         let heapObject: HeapElement = 
         { id: i, 
           heapMemorySize: randomHeap, 
-          heapMemoryUnit: heapUnitSize, 
-          unitLifeTime: 0};
+          unitLifeTime: heapUnitSize, 
+          heapTimeUnit: randomTimeUnit};
         currentJob.heapElements.push(heapObject);
       }
 
@@ -153,36 +154,52 @@ public createLargeJob() {
         let arrival: number = 0;
         let i: number;
         for (i = 0; i < 10; i++) {
-            let type: string = this.GenerateRandJobType();
-
-            switch(type) {
-
-              case ("SMALL"):
-                console.log("SMALL");
-                let newJob: Job = this.createSmallJob();
-                newJob.arrivalTime = arrival;
-                this.jobsQueue.push(newJob);
-                
-                break;
-              case ("MEDIUM"):
-                console.log("MEDIUM");
-                let newJobmed: Job = this.createMediumJob();
-                newJobmed.arrivalTime = arrival;
-                this.jobsQueue.push(newJobmed);
-                break;
-              case ("LARGE"):
-                console.log("LARGE");
-                let newJoblg: Job = this.createLargeJob();
-                newJoblg.arrivalTime = arrival;
-                this.jobsQueue.push(newJoblg);
-                break;
-              default:
-                console.log("SOMETHINGS WRONG");
-                break;
-            }
-            arrival += this.GenerateRandomNum(1,5);
+          let type: string = this.GenerateRandJobType();
+          switch(type) {
+            case (JobType.Small):
+              console.log("SMALL");
+              let newSmJob: Job = this.createSmallJob();
+              newSmJob.arrivalTime = arrival;
+              this.jobsQueue.push(newSmJob);
+              this.logJob(newSmJob);
+              break;
+            case (JobType.Medium):
+              console.log("MEDIUM");
+              let newMdJob: Job = this.createMediumJob();
+              newMdJob.arrivalTime = arrival;
+              this.jobsQueue.push(newMdJob);
+              this.logJob(newMdJob);
+              break;
+            case (JobType.Large):
+              console.log("LARGE");
+              let newLgJob: Job = this.createLargeJob();
+              newLgJob.arrivalTime = arrival;
+              this.jobsQueue.push(newLgJob);
+              this.logJob(newLgJob);
+              break;
+            default:
+              console.log("SOMETHINGS WRONG");
+              break;
+          }
+          arrival += this.GenerateRandomNum(1,5);
         }
-  }
+    }
+
+    public logJob(newJob: Job) {
+      this.log(`${newJob.type} Job`);
+      this.log(`Run Time: ${newJob.runTime}`);
+      this.log(`Code Size: ${newJob.codeSize}`);
+      this.log(`Stack Size: ${newJob.stackSize}`);
+      this.log(`Heap Elements: ${newJob.heapElements.length}`);
+      newJob!.heapElements.map((el) => {
+        this.log(`Heap Element ${el.id}: ${el.heapMemorySize} memory            ${el.unitLifeTime} memory units lifetime: ${el.heapTimeUnit} time units`)
+      })
+      this.log(`-----------------------------------`);
+    }
+
+    public log(message: string): void {
+      this.logLines.push(message);
+    }
 }
 
 export { MemorySimulation };
