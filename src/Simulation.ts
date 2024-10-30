@@ -51,6 +51,22 @@ class MemorySimulation {
     return Math.floor(Math.random() * max) + min;
   }
 
+  public createSmallJob( currentJob: Job) {
+      currentJob.type = JobType.Small;
+      currentJob.codeSize = this.GenerateRandomNum(40,80);
+      currentJob.stackSize = this.GenerateRandomNum(20,40);
+      currentJob.runTime = this.GenerateRandomNum(1,5);
+      
+  }
+
+  public createMediumJob( currentJob: Job) {
+    
+  }
+
+  public createLargeJob( currentJob: Job) {
+    
+  }
+
   public GenerateRandJobType () {
       let smallInterval: number = this.smallJobPercentage;
       let mediumInterval: number = this.smallJobPercentage + this.mediumJobPercentage;
