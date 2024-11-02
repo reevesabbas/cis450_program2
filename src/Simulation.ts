@@ -18,7 +18,33 @@ interface Job {
   stackSize: number;
   heapElements: Array<HeapElement>;
   arrivalTime: number;
+}
 
+class MemoryBlock {
+  start: number;
+  size: number;
+  free: boolean;
+  prev: MemoryBlock | null;
+  next: MemoryBlock | null;
+
+  constructor(start: number, size: number, free: boolean = true) {
+    this.start = start;
+    this.size = size;
+    this.free = free;
+    this.prev = null;
+    this.next = null;
+  }
+}
+
+class MemoryPool {
+  head: MemoryBlock | null;
+  tail: MemoryBlock | null;
+
+  constructor(memoryUnitSize: number) {
+    const initialBlock = new MemoryBlock(0, memoryUnitSize);
+    this.head = initialBlock;
+    this.tail = initialBlock;
+  }
 }
 
 class MemorySimulation {
