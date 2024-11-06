@@ -53,11 +53,10 @@ interface MemoryBlock {
 }
 
 class MemoryPool {
-  memoryBlocks: Array<MemoryBlock> | null = null;
+  memoryBlocks: Array<MemoryBlock> = [];
   type: AlgorithmType;
   totalMemoryUnits: number;
   freeMemoryUnits: number;
-  freeSpaceMap: Map<number, number> = new Map<number, number>();
   allocatedMemoryUnits: number = 0;
   totalJobsProcessed: number = 0;
   nextFitPointer: number = 0;
@@ -68,6 +67,78 @@ class MemoryPool {
     this.type = type;
     this.totalMemoryUnits = totalSize;
     this.freeMemoryUnits = totalSize;
+  }
+
+  public mallocNF(size: number) {
+    const startingPosition = this.nextFitPointer;
+    let freeUnitCount = 0;
+
+    for(let i = 0; i < this.memoryBlocks.length; i++) {
+      const memoryBlock = this.memoryBlocks[startingPosition];
+      if (memoryBlock.free) {
+        freeUnitCount += memoryBlock.size;
+        if (freeUnitCount === size) {
+          for (let i = 0; i < size; i++) {
+            this.memoryBlocks[memoryBlock.location + i].free = false; // Use job ID here in a real scenario
+          }
+          this.nextFitPointer = memoryBlock.location;
+          return memoryBlock.location; 
+        }
+      } else {
+        freeUnitCount = 0;
+      }
+    }
+
+    //Nothing found;
+    return null;
+  }
+
+  public mallocWF(size: number) {
+    const freeBlocksMap: Map<number, number> = new Map();
+
+    for (let i = 0; i < this.memoryBlocks.length; i++) {
+      const currBlock = this.memoryBlocks[i];
+      if (currBlock.free) {
+        let startLocation = i;
+        let blockSize = 0;
+
+        while (i < this.memoryBlocks.length && this.memoryBlocks[i].free) {
+          blockSize += this.memoryBlocks[i].size;
+          i++;
+        }
+
+        freeBlocksMap.set(startLocation, blockSize);
+      }
+    }
+
+    let largestFreeBlockStart: number | null = null;
+    let largestBlockSize = 0;
+
+    for (const [startLocation, blockSize] of freeBlocksMap.entries()) {
+      if (blockSize >= size && blockSize > largestBlockSize) {
+        largestFreeBlockStart = startLocation;
+        largestBlockSize = blockSize;
+      }
+    }
+
+    if (largestFreeBlockStart === null) {
+      //Log error
+      return null;
+    }
+
+    let remainingSize = size;
+    for (let i = largestFreeBlockStart; remainingSize > 0 && i < this.memoryBlocks.length; i++) {
+      if (this.memoryBlocks[i].free) {
+        this.memoryBlocks[i].free = false;
+        remainingSize -= this.memoryBlocks[i].size;
+      }
+    }
+
+    this.freeMemoryUnits -= size;
+    this.allocatedMemoryUnits += size;
+
+    return largestFreeBlockStart;
+
   }
 }
 
@@ -256,7 +327,6 @@ class MemorySimulation {
     this.fillSimulationJobs();
     this.fillEventQueue();
     console.log(this.eventsQueue);
-    
   }
 
   public logJob(newJob: Job) {
