@@ -30,8 +30,8 @@ interface Event {
 interface HeapElement {
   id: number;
   heapMemorySize: number;
-  unitLifeTime: number;
-  heapTimeUnit: number;
+  memoryUnits: number;
+  heapLifeTime: number;
   location: number | null;
 }
 
@@ -104,8 +104,8 @@ class MemorySimulation {
       let heapObject: HeapElement = {
         id: i,
         heapMemorySize: randomHeap,
-        unitLifeTime: heapUnitSize,
-        heapTimeUnit: randomTimeUnit,
+        memoryUnits: heapUnitSize,
+        heapLifeTime: randomTimeUnit,
         location: null,
       };
       currentJob.heapElements.push(heapObject);
@@ -150,7 +150,7 @@ class MemorySimulation {
   public fillSimulationJobs(): void {
     let i: number;
     let arrival: number = 0;
-    for (i = 0; i < 15; i++) {
+    for (i = 0; i < 1; i++) {
       let type: string = this.GenerateRandJobType();
       switch (type) {
         case JobType.Small: {
@@ -221,7 +221,7 @@ class MemorySimulation {
       var heapAllocatedBatchSize = 0;
       
       job.heapElements.forEach((heapEl) => {
-        var heapTermination = heapArrival + heapEl.heapTimeUnit;
+        var heapTermination = heapArrival + heapEl.heapLifeTime;
         this.createEvent(EventType.HeapAllocation, heapArrival, job, heapEl);
         this.createEvent(EventType.HeapTermination, heapTermination, job, heapEl);
         heapAllocatedBatchSize++;
@@ -237,7 +237,6 @@ class MemorySimulation {
         null
       );
     });
-      //there will be heap elements termination that go over the job time. Maybe we terminate these before they finish or leave them in..?
       this.eventsQueue.sort((eventA, eventB) => eventA.arrivalTime - eventB.arrivalTime);
   }
 
@@ -256,7 +255,7 @@ class MemorySimulation {
     this.log(`Heap Elements: ${newJob.heapElements.length}`);
     newJob!.heapElements.map((el) => {
       this.log(
-        `Heap Element ${el.id}: ${el.heapMemorySize} memory            ${el.unitLifeTime} memory units lifetime: ${el.heapTimeUnit} time units`
+        `Heap Element ${el.id}: ${el.heapMemorySize} memory            ${el.heapMemorySize} memory units lifetime: ${el.heapLifeTime} time units`
       );
     });
     this.log(`-----------------------------------`);
