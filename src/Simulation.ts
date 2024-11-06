@@ -69,6 +69,29 @@ class MemoryPool {
     this.freeMemoryUnits = totalSize;
   }
 
+  public mallocFF(size: number) {
+    const startingPosition = 0;
+    let freeUnitCount = 0;
+
+    for(let i = 0; i < this.memoryBlocks.length; i++) {
+      const memoryBlock = this.memoryBlocks[startingPosition];
+      if (memoryBlock.free) {
+        freeUnitCount += memoryBlock.size;
+        if (freeUnitCount === size) {
+          for (let i = 0; i < size; i++) {
+            this.memoryBlocks[memoryBlock.location + i].free = false; // Use job ID here in a real scenario
+          }
+          return memoryBlock.location; 
+        }
+      } else {
+        freeUnitCount = 0;
+      }
+    }
+
+    //Nothing found;
+    return null;
+  }
+
   public mallocNF(size: number) {
     const startingPosition = this.nextFitPointer;
     let freeUnitCount = 0;
@@ -79,7 +102,7 @@ class MemoryPool {
         freeUnitCount += memoryBlock.size;
         if (freeUnitCount === size) {
           for (let i = 0; i < size; i++) {
-            this.memoryBlocks[memoryBlock.location + i].free = false; // Use job ID here in a real scenario
+            this.memoryBlocks[memoryBlock.location + i].free = false; 
           }
           this.nextFitPointer = memoryBlock.location;
           return memoryBlock.location; 
@@ -138,6 +161,54 @@ class MemoryPool {
     this.allocatedMemoryUnits += size;
 
     return largestFreeBlockStart;
+
+  }
+
+  public mallocBF(size: number) {
+    const freeBlocksMap: Map<number, number> = new Map();
+
+    for (let i = 0; i < this.memoryBlocks.length; i++) {
+      const currBlock = this.memoryBlocks[i];
+      if (currBlock.free) {
+        let startLocation = i;
+        let blockSize = 0;
+
+        while (i < this.memoryBlocks.length && this.memoryBlocks[i].free) {
+          blockSize += this.memoryBlocks[i].size;
+          i++;
+        }
+
+        freeBlocksMap.set(startLocation, blockSize);
+      }
+    }
+
+    let smallestFreeBlockStart: number | null = null;
+    let smallestBlockSize = 0;
+
+    for (const [startLocation, blockSize] of freeBlocksMap.entries()) {
+      if (blockSize >= size && blockSize < smallestBlockSize) {
+        smallestFreeBlockStart = startLocation;
+        smallestBlockSize = blockSize;
+      }
+    }
+
+    if (smallestFreeBlockStart === null) {
+      //Log error
+      return null;
+    }
+
+    let remainingSize = size;
+    for (let i = smallestFreeBlockStart; remainingSize > 0 && i < this.memoryBlocks.length; i++) {
+      if (this.memoryBlocks[i].free) {
+        this.memoryBlocks[i].free = false;
+        remainingSize -= this.memoryBlocks[i].size;
+      }
+    }
+
+    this.freeMemoryUnits -= size;
+    this.allocatedMemoryUnits += size;
+
+    return smallestFreeBlockStart;
 
   }
 }
