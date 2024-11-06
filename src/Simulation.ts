@@ -1,5 +1,3 @@
-import { create } from "domain";
-
 enum JobType {
   Small = "SMALL",
   Medium = "MEDIUM",
@@ -26,6 +24,7 @@ interface Event {
   type: EventType;
   job: Job;
   arrivalTime: number;
+  heapElement: HeapElement | null;
 }
 
 interface HeapElement {
@@ -47,36 +46,10 @@ interface Job {
   stackLocation: number | null;
 }
 
-class MemoryBlock {
+interface MemoryBlock {
   location: number;
   size: number;
   free: boolean;
-  prev: MemoryBlock | null;
-  next: MemoryBlock | null;
-
-  constructor(location: number, size: number, free: boolean = true) {
-    this.location = location;
-    this.size = size;
-    this.free = free;
-    this.prev = null;
-    this.next = null;
-  }
-}
-
-class MemoryPool {
-  head: MemoryBlock | null;
-  tail: MemoryBlock | null;
-  algorithmType: AlgorithmType;
-
-  constructor(memoryUnitSize: number) {
-    const initialBlock = new MemoryBlock(0, memoryUnitSize);
-    this.head = initialBlock;
-    this.tail = initialBlock;
-  }
-
-  public createUnits(numberOfUnits: number) {
-    //Create x amount of empty memory blocks. Returns Pool
-  }
 }
 
 class MemorySimulation {
@@ -91,10 +64,14 @@ class MemorySimulation {
   logLines: Array<string> = [];
   totalJobs: number = 0; // Counter for # of jobs processed.
   time: number = 0;
-  preFillTime: number = 0; //The amount of time to let jobs pre fill prior to sim start
+  preFillTime: number = 0; // The amount of time to let jobs pre fill prior to sim start
   memoryPool: Array<number> = [];
   allocatedMemoryUnits: number = 0;
   freeMemoryUnits: number;
+  firstFitMemoryPool: Array<MemoryBlock> | null = null;
+  nextFitMemoryPool: Array<MemoryBlock> | null = null;
+  bestFitMemoryPool: Array<MemoryBlock> | null = null;
+  worstFitMemoryPool: Array<MemoryBlock> | null = null;
 
   constructor(
     smallJobNum: number,
@@ -158,8 +135,7 @@ class MemorySimulation {
 
   public GenerateRandJobType() {
     let smallInterval: number = this.smallJobPercentage;
-    let mediumInterval: number =
-      this.smallJobPercentage + this.mediumJobPercentage;
+    let mediumInterval: number = this.smallJobPercentage + this.mediumJobPercentage;
     let currentNum: number = this.GenerateRandomNum(1, 100);
 
     if (currentNum <= smallInterval) {
@@ -174,7 +150,7 @@ class MemorySimulation {
   public fillSimulationJobs(): void {
     let i: number;
     let arrival: number = 0;
-    for (i = 0; i < 1; i++) {
+    for (i = 0; i < 15; i++) {
       let type: string = this.GenerateRandJobType();
       switch (type) {
         case JobType.Small: {
@@ -186,7 +162,7 @@ class MemorySimulation {
             arrival,
             []
           );
-          this.HeapGenerator(newJob, 75);
+          this.HeapGenerator(newJob, newJob.runTime * 50);
           this.jobsQueue.push(newJob);
           this.logJob(newJob);
           break;
@@ -200,7 +176,7 @@ class MemorySimulation {
             arrival,
             []
           );
-          this.HeapGenerator(newJob, 10);
+          this.HeapGenerator(newJob, newJob.runTime * 100);
           this.jobsQueue.push(newJob);
           this.logJob(newJob);
           break;
@@ -214,7 +190,7 @@ class MemorySimulation {
             arrival,
             []
           );
-          this.HeapGenerator(newJob, 15);
+          this.HeapGenerator(newJob, newJob.runTime * 250);
           this.jobsQueue.push(newJob);
           this.logJob(newJob);
           break;
@@ -227,47 +203,49 @@ class MemorySimulation {
     }
   }
 
-  public createEvent(type: EventType, arrivalTime: number, job: Job) {
+  public createEvent(type: EventType, arrivalTime: number, job: Job, heapElement: HeapElement | null) {
     const newEvent: Event = {
       type: type,
       arrivalTime: arrivalTime,
       job: job,
+      heapElement: heapElement
     };
     this.eventsQueue.push(newEvent);
   }
 
   public fillEventQueue(): void {
     this.jobsQueue.forEach((job, index) => {
-      this.createEvent(EventType.Arrival, job.arrivalTime, job);
+      this.createEvent(EventType.Arrival, job.arrivalTime, job, null);
+      
+      var heapArrival = job.arrivalTime;
+      var heapAllocatedBatchSize = 0;
+      
+      job.heapElements.forEach((heapEl) => {
+        var heapTermination = heapArrival + heapEl.heapTimeUnit;
+        this.createEvent(EventType.HeapAllocation, heapArrival, job, heapEl);
+        this.createEvent(EventType.HeapTermination, heapTermination, job, heapEl);
+        heapAllocatedBatchSize++;
+        if (heapAllocatedBatchSize === 50) {
+          heapArrival++;
+          heapAllocatedBatchSize = 0;
+        }
+      });
       this.createEvent(
         EventType.Termination,
         job.arrivalTime + job.runTime,
-        job
+        job,
+        null
       );
-
-      var heapArrival = job.arrivalTime;
-      var heapTermination = job.arrivalTime + job.runTime;
-      var heapAllocated = 0;
-
-      job.heapElements.forEach((heapEl, index) => {
-        this.createEvent(EventType.HeapAllocation, heapArrival, job);
-        heapAllocated++;
-        this.createEvent(
-          EventType.HeapTermination,
-          this.GenerateRandomNum(heapArrival, heapTermination),
-          job
-        );
-        if (heapAllocated % 50 === 0) {
-          heapArrival++;
-        }
-      });
     });
+      //there will be heap elements termination that go over the job time. Maybe we terminate these before they finish or leave them in..?
+      this.eventsQueue.sort((eventA, eventB) => eventA.arrivalTime - eventB.arrivalTime);
   }
 
   public startSimulation(): void {
     this.fillSimulationJobs();
     this.fillEventQueue();
     console.log(this.eventsQueue);
+    
   }
 
   public logJob(newJob: Job) {

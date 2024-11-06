@@ -122,8 +122,8 @@ function App() {
             </button>
               <div className="flex w-full h-full p-2 overflow-scroll">
                 <div className="flex-col col-span-1">
-                  {simulation?.logLines.map((el) => {
-                    return <h1 className="text-white">{el}</h1>;
+                  {simulation?.logLines.map((el, index) => {
+                    return <h1 key={index} className="text-white">{el}</h1>;
                   })}
                 </div>
               </div>
