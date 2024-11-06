@@ -31,7 +31,7 @@ interface HeapElement {
   id: number;
   heapMemorySize: number;
   memoryUnits: number;
-  heapLifeTime: number;
+  heapLifeTime: number | null;
   location: number | null;
 }
 
@@ -97,15 +97,12 @@ class MemorySimulation {
     for (let i: number = 1; i <= heapObjects; i++) {
       let randomHeap: number = this.GenerateRandomNum(20, 50);
       let heapUnitSize: number = Math.ceil(randomHeap / this.memoryUnitSize);
-      let randomTimeUnit: number = this.GenerateRandomNum(
-        currentJob.runTime - (currentJob.runTime - 1),
-        currentJob.runTime
-      );
+      
       let heapObject: HeapElement = {
         id: i,
         heapMemorySize: randomHeap,
         memoryUnits: heapUnitSize,
-        heapLifeTime: randomTimeUnit,
+        heapLifeTime: null,
         location: null,
       };
       currentJob.heapElements.push(heapObject);
@@ -221,7 +218,10 @@ class MemorySimulation {
       var heapAllocatedBatchSize = 0;
       
       job.heapElements.forEach((heapEl) => {
-        var heapTermination = heapArrival + heapEl.heapLifeTime;
+        var heapTermination: number = this.GenerateRandomNum(
+          heapArrival - (heapArrival - 1),
+          heapArrival
+        );
         this.createEvent(EventType.HeapAllocation, heapArrival, job, heapEl);
         this.createEvent(EventType.HeapTermination, heapTermination, job, heapEl);
         heapAllocatedBatchSize++;
