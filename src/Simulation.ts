@@ -52,6 +52,25 @@ interface MemoryBlock {
   free: boolean;
 }
 
+class MemoryPool {
+  memoryBlocks: Array<MemoryBlock> | null = null;
+  type: AlgorithmType;
+  totalMemoryUnits: number;
+  freeMemoryUnits: number;
+  freeSpaceMap: Map<number, number> = new Map<number, number>();
+  allocatedMemoryUnits: number = 0;
+  totalJobsProcessed: number = 0;
+  nextFitPointer: number = 0;
+  internalFragmentation: number = 0; //Tracks wasted space within allocated memory units.
+  externalFragmentation: number = 0; //Tracks scattered free blocks that cannot satisfy a request.
+
+  constructor(type: AlgorithmType, totalSize: number) {
+    this.type = type;
+    this.totalMemoryUnits = totalSize;
+    this.freeMemoryUnits = totalSize;
+  }
+}
+
 class MemorySimulation {
   smallJobPercentage: number;
   mediumJobPercentage: number;
@@ -62,16 +81,9 @@ class MemorySimulation {
   jobsQueue: Array<Job> = [];
   eventsQueue: Array<Event> = [];
   logLines: Array<string> = [];
-  totalJobs: number = 0; // Counter for # of jobs processed.
   time: number = 0;
-  preFillTime: number = 0; // The amount of time to let jobs pre fill prior to sim start
-  memoryPool: Array<number> = [];
-  allocatedMemoryUnits: number = 0;
-  freeMemoryUnits: number;
-  firstFitMemoryPool: Array<MemoryBlock> | null = null;
-  nextFitMemoryPool: Array<MemoryBlock> | null = null;
-  bestFitMemoryPool: Array<MemoryBlock> | null = null;
-  worstFitMemoryPool: Array<MemoryBlock> | null = null;
+  preFillTime: number = 2000; // The amount of time to let jobs pre fill prior to sim start 
+  memoryPools: Array<MemoryPool> | null = null;
 
   constructor(
     smallJobNum: number,
