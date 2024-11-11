@@ -169,11 +169,10 @@ class MemorySimulation {
   
         // Schedule Heap Allocation Event
         this.createEvent(EventType.HeapAllocation, heapArrival, job, heapEl);
-  
        
         const heapTerminationTime = this.GenerateRandomNum(
           heapArrival + 1,  
-          job.arrivalTime + job.runTime 
+          (job.arrivalTime + job.runTime - 1)
         );
   
        
