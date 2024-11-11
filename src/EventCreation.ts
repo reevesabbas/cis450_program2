@@ -1,5 +1,4 @@
 import {JobType, AlgorithmType, EventType, Event, HeapElement, Job, MemoryBlock, MemoryPool, HeapStatus} from './Objects'; 
-import { mallocFF, mallocBF, mallocNF, mallocWF } from './MemAlgorithms';
 
 class MemorySimulation {
   smallJobPercentage: number;

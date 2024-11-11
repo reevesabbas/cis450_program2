@@ -1,5 +1,5 @@
 import { memo, useState } from "react";
-import { MemorySimulation } from "./Simulation";
+import { MemorySimulation } from "./EventCreation";
 
 function App() {
   const [jobAllocation, setJobAllocation] = useState("");
