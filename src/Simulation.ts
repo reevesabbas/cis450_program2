@@ -89,7 +89,7 @@ class MemorySimulation {
   public fillSimulationJobs(): void {
     let i: number;
     let arrival: number = 0;
-    while (arrival < 10) {
+    while (arrival < 100) {
       let type: string = this.GenerateRandJobType();
       switch (type) {
         case JobType.Small: {
@@ -100,7 +100,7 @@ class MemorySimulation {
             this.GenerateRandomNum(4, 6),
             arrival
           );
-          this.HeapGenerator(newJob, newJob.runTime * 1);
+          this.HeapGenerator(newJob, newJob.runTime * 5);
           this.jobsQueue.push(newJob);
           this.logJob(newJob);
           break;
@@ -113,7 +113,7 @@ class MemorySimulation {
             this.GenerateRandomNum(9, 11),
             arrival
           );
-          this.HeapGenerator(newJob, newJob.runTime * 1);
+          this.HeapGenerator(newJob, newJob.runTime * 10);
           this.jobsQueue.push(newJob);
           this.logJob(newJob);
           break;
@@ -126,7 +126,7 @@ class MemorySimulation {
             this.GenerateRandomNum(24, 26),
             arrival
           );
-          this.HeapGenerator(newJob, newJob.runTime * 1);
+          this.HeapGenerator(newJob, newJob.runTime * 15);
           this.jobsQueue.push(newJob);
           this.logJob(newJob);
           break;
