@@ -44,7 +44,7 @@ class MemorySimulation {
         heapMemorySize: randomHeap,
         memoryUnits: heapUnitSize,
         heapLifeTime: null,
-        location: null,
+        locationFF: null, locationBF: null, locationWF: null, locationNF: null,
         status: HeapStatus.Start, };
       currentJob.heapElements.push(heapObject);
     }
@@ -187,8 +187,14 @@ class MemorySimulation {
   }
   
   public startSimulation(): void {
+    let SimClock: number = 0;
     this.fillSimulationJobs();
     this.fillEventQueue();
+
+    // While EventsList isn't empty
+    //Pop off the next event and decrement based on its event type
+    //When allocating, you must allocate that object
+
     console.log(this.eventsQueue);
   }
 

@@ -36,7 +36,10 @@ export interface HeapElement {
     heapMemorySize: number;
     memoryUnits: number;
     heapLifeTime: number | null;
-    location: number | null;
+    locationFF: number | null;
+    locationNF: number | null;
+    locationWF: number | null;
+    locationBF: number | null;
     status: HeapStatus;
   }
   
