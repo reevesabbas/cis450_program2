@@ -73,7 +73,7 @@ class MemoryPool {
     const startingPosition = 0;
     let freeUnitCount = 0;
 
-    for(let i = 0; i < this.memoryBlocks.length; i++) {
+    for (let i = 0; i < this.memoryBlocks.length; i++) {
       const memoryBlock = this.memoryBlocks[startingPosition];
       if (memoryBlock.free) {
         freeUnitCount += memoryBlock.size;
@@ -81,7 +81,7 @@ class MemoryPool {
           for (let i = 0; i < size; i++) {
             this.memoryBlocks[memoryBlock.location + i].free = false; // Use job ID here in a real scenario
           }
-          return memoryBlock.location; 
+          return memoryBlock.location;
         }
       } else {
         freeUnitCount = 0;
@@ -96,16 +96,16 @@ class MemoryPool {
     const startingPosition = this.nextFitPointer;
     let freeUnitCount = 0;
 
-    for(let i = 0; i < this.memoryBlocks.length; i++) {
+    for (let i = 0; i < this.memoryBlocks.length; i++) {
       const memoryBlock = this.memoryBlocks[startingPosition];
       if (memoryBlock.free) {
         freeUnitCount += memoryBlock.size;
         if (freeUnitCount === size) {
           for (let i = 0; i < size; i++) {
-            this.memoryBlocks[memoryBlock.location + i].free = false; 
+            this.memoryBlocks[memoryBlock.location + i].free = false;
           }
           this.nextFitPointer = memoryBlock.location;
-          return memoryBlock.location; 
+          return memoryBlock.location;
         }
       } else {
         freeUnitCount = 0;
@@ -150,7 +150,11 @@ class MemoryPool {
     }
 
     let remainingSize = size;
-    for (let i = largestFreeBlockStart; remainingSize > 0 && i < this.memoryBlocks.length; i++) {
+    for (
+      let i = largestFreeBlockStart;
+      remainingSize > 0 && i < this.memoryBlocks.length;
+      i++
+    ) {
       if (this.memoryBlocks[i].free) {
         this.memoryBlocks[i].free = false;
         remainingSize -= this.memoryBlocks[i].size;
@@ -161,7 +165,6 @@ class MemoryPool {
     this.allocatedMemoryUnits += size;
 
     return largestFreeBlockStart;
-
   }
 
   public mallocBF(size: number) {
@@ -198,7 +201,11 @@ class MemoryPool {
     }
 
     let remainingSize = size;
-    for (let i = smallestFreeBlockStart; remainingSize > 0 && i < this.memoryBlocks.length; i++) {
+    for (
+      let i = smallestFreeBlockStart;
+      remainingSize > 0 && i < this.memoryBlocks.length;
+      i++
+    ) {
       if (this.memoryBlocks[i].free) {
         this.memoryBlocks[i].free = false;
         remainingSize -= this.memoryBlocks[i].size;
@@ -209,7 +216,6 @@ class MemoryPool {
     this.allocatedMemoryUnits += size;
 
     return smallestFreeBlockStart;
-
   }
 }
 
@@ -224,7 +230,7 @@ class MemorySimulation {
   eventsQueue: Array<Event> = [];
   logLines: Array<string> = [];
   time: number = 0;
-  preFillTime: number = 2000; // The amount of time to let jobs pre fill prior to sim start 
+  preFillTime: number = 2000; // The amount of time to let jobs pre fill prior to sim start
   memoryPools: Array<MemoryPool> | null = null;
 
   constructor(
@@ -251,7 +257,7 @@ class MemorySimulation {
     for (let i: number = 1; i <= heapObjects; i++) {
       let randomHeap: number = this.GenerateRandomNum(20, 50);
       let heapUnitSize: number = Math.ceil(randomHeap / this.memoryUnitSize);
-      
+
       let heapObject: HeapElement = {
         id: i,
         heapMemorySize: randomHeap,
@@ -286,7 +292,8 @@ class MemorySimulation {
 
   public GenerateRandJobType() {
     let smallInterval: number = this.smallJobPercentage;
-    let mediumInterval: number = this.smallJobPercentage + this.mediumJobPercentage;
+    let mediumInterval: number =
+      this.smallJobPercentage + this.mediumJobPercentage;
     let currentNum: number = this.GenerateRandomNum(1, 100);
 
     if (currentNum <= smallInterval) {
@@ -315,7 +322,6 @@ class MemorySimulation {
           );
           this.HeapGenerator(newJob, newJob.runTime * 50);
           this.jobsQueue.push(newJob);
-          this.logJob(newJob);
           break;
         }
         case JobType.Medium: {
@@ -329,7 +335,6 @@ class MemorySimulation {
           );
           this.HeapGenerator(newJob, newJob.runTime * 100);
           this.jobsQueue.push(newJob);
-          this.logJob(newJob);
           break;
         }
         case JobType.Large: {
@@ -343,7 +348,6 @@ class MemorySimulation {
           );
           this.HeapGenerator(newJob, newJob.runTime * 250);
           this.jobsQueue.push(newJob);
-          this.logJob(newJob);
           break;
         }
         default:
@@ -354,30 +358,42 @@ class MemorySimulation {
     }
   }
 
-  public createEvent(type: EventType, arrivalTime: number, job: Job, heapElement: HeapElement | null) {
+  public createEvent(
+    type: EventType,
+    arrivalTime: number,
+    job: Job,
+    heapElement: HeapElement | null
+  ) {
     const newEvent: Event = {
       type: type,
       arrivalTime: arrivalTime,
       job: job,
-      heapElement: heapElement
+      heapElement: heapElement,
     };
     this.eventsQueue.push(newEvent);
+    this.logEvents(newEvent);
   }
 
   public fillEventQueue(): void {
     this.jobsQueue.forEach((job, index) => {
       this.createEvent(EventType.Arrival, job.arrivalTime, job, null);
-      
+
       var heapArrival = job.arrivalTime;
       var heapAllocatedBatchSize = 0;
-      
+
       job.heapElements.forEach((heapEl) => {
         var heapTermination: number = this.GenerateRandomNum(
           heapArrival - (heapArrival - 1),
           heapArrival
         );
+        heapEl.heapLifeTime = heapTermination;
         this.createEvent(EventType.HeapAllocation, heapArrival, job, heapEl);
-        this.createEvent(EventType.HeapTermination, heapTermination, job, heapEl);
+        this.createEvent(
+          EventType.HeapTermination,
+          heapTermination,
+          job,
+          heapEl
+        );
         heapAllocatedBatchSize++;
         if (heapAllocatedBatchSize === 50) {
           heapArrival++;
@@ -391,7 +407,9 @@ class MemorySimulation {
         null
       );
     });
-      this.eventsQueue.sort((eventA, eventB) => eventA.arrivalTime - eventB.arrivalTime);
+    this.eventsQueue.sort(
+      (eventA, eventB) => eventA.arrivalTime - eventB.arrivalTime
+    );
   }
 
   public startSimulation(): void {
@@ -400,17 +418,14 @@ class MemorySimulation {
     console.log(this.eventsQueue);
   }
 
-  public logJob(newJob: Job) {
-    this.log(`${newJob.type} Job`);
-    this.log(`Run Time: ${newJob.runTime}`);
-    this.log(`Code Size: ${newJob.codeSize}`);
-    this.log(`Stack Size: ${newJob.stackSize}`);
-    this.log(`Heap Elements: ${newJob.heapElements.length}`);
-    newJob!.heapElements.map((el) => {
-      this.log(
-        `Heap Element ${el.id}: ${el.heapMemorySize} memory            ${el.heapMemorySize} memory units lifetime: ${el.heapLifeTime} time units`
-      );
-    });
+  public logEvents(event: Event) {
+    this.log(`${event.type} Event`);
+    this.log(`Arrival: ${event.arrivalTime}`);
+    this.log(
+      `Run Time: ${event.heapElement?.heapLifeTime ?? event.job.runTime}`
+    );
+    this.log(`Memory Size: ${event.heapElement?.heapMemorySize}`);
+    this.log(`Memory Units: ${event.heapElement?.memoryUnits}`);
     this.log(`-----------------------------------`);
   }
 
