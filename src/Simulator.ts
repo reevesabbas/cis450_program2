@@ -101,7 +101,6 @@ class MemorySimulation {
           );
           this.HeapGenerator(newJob, newJob.runTime * 5);
           this.jobsQueue.push(newJob);
-          this.logJob(newJob);
           break;
         }
         case JobType.Medium: {
@@ -114,7 +113,6 @@ class MemorySimulation {
           );
           this.HeapGenerator(newJob, newJob.runTime * 10);
           this.jobsQueue.push(newJob);
-          this.logJob(newJob);
           break;
         }
         case JobType.Large: {
@@ -127,7 +125,6 @@ class MemorySimulation {
           );
           this.HeapGenerator(newJob, newJob.runTime * 15);
           this.jobsQueue.push(newJob);
-          this.logJob(newJob);
           break;
         }
         default:
@@ -146,6 +143,7 @@ class MemorySimulation {
       heapElement: heapElement
     };
     this.eventsQueue.push(newEvent);
+    this.logEvents(newEvent);
   }
 
   public fillEventQueue(): void {
@@ -224,17 +222,14 @@ class MemorySimulation {
     console.log(this.eventsQueue);
   }
 
-  public logJob(newJob: Job) {
-    this.log(`${newJob.type} Job`);
-    this.log(`Run Time: ${newJob.runTime}`);
-    this.log(`Code Size: ${newJob.codeSize}`);
-    this.log(`Stack Size: ${newJob.stackSize}`);
-    this.log(`Heap Elements: ${newJob.heapElements.length}`);
-    newJob!.heapElements.map((el) => {
-      this.log(
-        `Heap Element ${el.id}: ${el.heapMemorySize} memory            ${el.heapMemorySize} memory units lifetime: ${el.heapLifeTime} time units`
-      );
-    });
+  public logEvents(event: Event) {
+    this.log(`${event.type} Event`);
+    this.log(`Arrival: ${event.arrivalTime}`);
+    this.log(
+      `Run Time: ${event.heapElement?.heapLifeTime ?? event.job.runTime}`
+    );
+    this.log(`Memory Size: ${event.heapElement?.heapMemorySize}`);
+    this.log(`Memory Units: ${event.heapElement?.memoryUnits}`);
     this.log(`-----------------------------------`);
   }
 
