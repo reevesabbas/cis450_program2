@@ -6,6 +6,7 @@ function App() {
   const [memoryUnitSize, setMemoryUnitSize] = useState(0);
   const [numberOfUnits, setNumberOfUnits] = useState(0);
   const [lostObjects, setLostObjects] = useState(false);
+  const [testName, setTestName] = useState("");
   const [completedInput, setCompletedInput] = useState(false);
   const [simulation, setSimulation] = useState<MemorySimulation | null>(null);
 
@@ -33,106 +34,99 @@ function App() {
 
   return (
     <div className="flex-1 h-screen w-screen place-content-center bg-[#0c1227]">
-      {!completedInput ? (
-        <>
-          <h1 className="text-white text-center text-2xl mb-20">
-            Welcome to Assignment 2 CIS 450
-          </h1>
-          <div className="flex justify-center">
-            <div className="flex-col col-span-1">
-              <div className="mb-1">
-                <label className="text-white">Enter Job Allocations</label>
-              </div>
-              <textarea
-                onChange={(event) => {
-                  setJobAllocation(event.target.value);
-                }}
-                className="bg-[#fdfdff] rounded-sm h-24 w-100 mb-5"
-                name={"JobAllocation"}
-                required
-              />
-              <div className="mb-1">
-                <label className="text-white">
-                  Enter Memory Unit Size (multiple of 8)
-                </label>
-              </div>
-              <input
-                onChange={(event) => {
-                  setMemoryUnitSize(parseInt(event.target.value));
-                }}
-                className="bg-[#fdfdff] rounded-sm"
-                name={"MemoryUnitSize"}
-                type="number"
-                required
-              />
-              <div className="my-2">
-                <label className="text-white">Enter Total Memory Units</label>
-              </div>
-              <input
-                onChange={(event) => {
-                  setNumberOfUnits(parseInt(event.target.value));
-                }}
-                className="bg-[#fdfdff] rounded-sm"
-                name={"MemoryUnitSize"}
-                type="number"
-                required
-              />
-              <div className="my-2">
-                <label className="text-white">Allow Lost Objects?</label>
-              </div>
-              <input
-                onChange={(event) => {
-                  setLostObjects(event.target.checked);
-                }}
-                className="bg-[#fdfdff] rounded-sm"
-                name={"MemoryUnitSize"}
-                type="checkbox"
-                required
-              />
-              <div className="mt-10">
-                <button
-                  className="bg-white p-2 rounded-sm"
-                  onClick={() => {
-                    startSimulation(
-                      jobAllocation,
-                      memoryUnitSize,
-                      numberOfUnits,
-                      lostObjects
-                    );
-                    setCompletedInput(true);
-                  }}
-                >
-                  Submit
-                </button>
-              </div>
-            </div>
+      <h1 className="text-white text-center text-2xl mb-20">
+        Welcome to Assignment 2 CIS 450
+      </h1>
+      <div className="flex justify-center">
+        <div className="flex-col col-span-1 space-y-5">
+          <div className="flex flex-col col-span-1">
+            <label className="text-white">Enter Job Allocations</label>
+            <textarea
+              onChange={(event) => {
+                setJobAllocation(event.target.value);
+              }}
+              className="bg-[#fdfdff] rounded-sm h-24 w-100 mb-5"
+              name={"JobAllocationInput"}
+              required
+            />
           </div>
-        </>
-      ) : (
-        <>
-          <div className="w-full justify-center text-white mb-5 whitespace-pre-wrap">
-            <div className="flex relative mx-auto w-[70%] h-[1000px] bg-[#090c14] rounded-xl">
+          <div className="flex flex-col col-span-1">
+            <label className="text-white">
+              Enter Memory Unit Size (multiple of 8)
+            </label>
+            <input
+              onChange={(event) => {
+                setMemoryUnitSize(parseInt(event.target.value));
+              }}
+              className="bg-[#fdfdff] rounded-sm"
+              name={"MemoryUnitSizeInput"}
+              type="number"
+              required
+            />
+          </div>
+          <div className="flex flex-col col-span-1">
+            <label className="text-white">Enter Total Memory Units</label>
+            <input
+              onChange={(event) => {
+                setNumberOfUnits(parseInt(event.target.value));
+              }}
+              className="bg-[#fdfdff] rounded-sm"
+              name={"TotalMemoryUnitsInput"}
+              type="number"
+              required
+            />
+          </div>
+          <div className="flex justify-between items-center">
+            <label className="text-white">Allow Lost Objects?</label>
+            <input
+              onChange={(event) => {
+                setLostObjects(event.target.checked);
+              }}
+              className="bg-[#fdfdff] size-5 rounded-sm"
+              name={"LostObjectsCheckbox"}
+              type="checkbox"
+              required
+            />
+          </div>
+          <div>
+            <div className="flex flex-col col-span-1 mb-5">
+              <label className="text-white">Test Name</label>
+             <input
+              onChange={(event) => {
+                setTestName(event.target.value);
+              }}
+              className="bg-[#fdfdff] rounded-sm"
+              name={"TestNameInput"}
+              type="text"
+              required
+            />
+            </div>
             <button
-              className="absolute top-3 right-3 text-white text-2xl"
+              className="bg-white p-1 rounded-sm"
               onClick={() => {
-                setCompletedInput(false);
+                startSimulation(
+                  jobAllocation,
+                  memoryUnitSize,
+                  numberOfUnits,
+                  lostObjects
+                );
+                setTimeout(() => {
+                  const output = simulation!.logLines.join("\r\n");
+                  const element = document.createElement("a");
+                  const file = new Blob([output], {type: 'text/plain'});
+                  element.href = URL.createObjectURL(file);
+                  element.download = testName;
+                  element.click();
+                }, 500)
               }}
             >
-              X
+              Run Simulation
             </button>
-              <div className="flex w-full h-full p-2 overflow-scroll">
-                <div className="flex-col col-span-1">
-                  {simulation?.logLines.map((el, index) => {
-                    return <h1 key={index} className="text-white">{el}</h1>;
-                  })}
-                </div>
-              </div>
-            </div>
           </div>
-        </>
-      )}
+        </div>
+      </div>
     </div>
-  );
+  )
 }
 
 export default App;

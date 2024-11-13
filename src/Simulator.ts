@@ -7,13 +7,14 @@ class MemorySimulation {
   memoryUnitSize: number;
   numberOfUnits: number;
   includeLostObjects: boolean;
+  totalNumOfJobs: number = 0;
   jobsQueue: Array<Job> = [];
   eventsQueue: Array<Event> = [];
   logLines: Array<string> = [];
   time: number = 0;
   preFillTime: number = 2000; // The amount of time to let jobs pre fill prior to sim start 
   memoryPools: Array<MemoryPool> | null = null;
-
+  
   constructor(
     smallJobNum: number,
     medJobNum: number,
@@ -58,7 +59,9 @@ class MemorySimulation {
     arrivalTime: number,
     
   ): Job {
+    this.totalNumOfJobs++;
     const newJob: Job = {
+      id: this.totalNumOfJobs,
       type: type,
       codeSize: code,
       stackSize: stack,
@@ -224,12 +227,14 @@ class MemorySimulation {
 
   public logEvents(event: Event) {
     this.log(`${event.type} Event`);
-    this.log(`Arrival: ${event.arrivalTime}`);
+    this.log(`Arrival Time at ${event.arrivalTime} for Job ${event.job.id}`);
     this.log(
       `Run Time: ${event.heapElement?.heapLifeTime ?? event.job.runTime}`
     );
-    this.log(`Memory Size: ${event.heapElement?.heapMemorySize}`);
-    this.log(`Memory Units: ${event.heapElement?.memoryUnits}`);
+    this.log(`Job Stack Size: ${event.job.stackSize}`);
+    this.log(`Job Code Size: ${event.job.codeSize}`);
+    this.log(`Heap Memory Size: ${event.heapElement?.heapMemorySize}`);
+    this.log(`Heap Memory Units: ${event.heapElement?.memoryUnits}`);
     this.log(`-----------------------------------`);
   }
 
