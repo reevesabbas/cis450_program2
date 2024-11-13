@@ -190,7 +190,33 @@ class MemorySimulation {
     let SimClock: number = 0;
     this.fillSimulationJobs();
     this.fillEventQueue();
-
+  
+    while (this.eventsQueue.length > 0) {
+      let currentEvent: Event|undefined = this.eventsQueue.shift();
+      
+      switch (currentEvent?.type) {
+        case (EventType.Arrival): {
+          
+          break;
+        }
+        case (EventType.Termination): {
+          
+          break;
+        }
+        case (EventType.HeapAllocation): {
+          
+          break;
+        }
+        case (EventType.HeapTermination): {
+         
+          break;
+        }
+        default:
+          
+          break;
+      }
+      
+    }
     // While EventsList isn't empty
     //Pop off the next event and decrement based on its event type
     //When allocating, you must allocate that object

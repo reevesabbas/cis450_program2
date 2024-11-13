@@ -53,6 +53,8 @@ export interface Job {
     codeLocation: number | null;
     stackLocation: number | null;
   }
+
+
   
 export  interface MemoryBlock {
     location: number;
