@@ -4,6 +4,9 @@ class MemorySimulation {
   smallJobPercentage: number;
   mediumJobPercentage: number;
   largeJobPercentage: number;
+  statsSmallJob: number;
+  statsMediumJob: number;
+  statsLargeJob: number;
   memoryUnitSize: number;
   numberOfUnits: number;
   includeLostObjects: boolean;
@@ -29,6 +32,9 @@ class MemorySimulation {
     this.memoryUnitSize = memUnitSize;
     this.numberOfUnits = numOfUnits;
     this.includeLostObjects = includeLostObjects;
+    this.statsSmallJob = 0;
+    this.statsMediumJob = 0;
+    this.statsLargeJob = 0;
   }
 
   public GenerateRandomNum(min: number, max: number): number {
@@ -104,6 +110,7 @@ class MemorySimulation {
           );
           this.HeapGenerator(newJob, newJob.runTime * 5);
           this.jobsQueue.push(newJob);
+          this.statsSmallJob++;
           break;
         }
         case JobType.Medium: {
@@ -116,6 +123,7 @@ class MemorySimulation {
           );
           this.HeapGenerator(newJob, newJob.runTime * 10);
           this.jobsQueue.push(newJob);
+          this.statsMediumJob++;
           break;
         }
         case JobType.Large: {
@@ -128,6 +136,7 @@ class MemorySimulation {
           );
           this.HeapGenerator(newJob, newJob.runTime * 15);
           this.jobsQueue.push(newJob);
+          this.statsLargeJob++;
           break;
         }
         default:
@@ -241,6 +250,24 @@ class MemorySimulation {
   public log(message: string): void {
     this.logLines.push(message);
   }
+
+  public logStatistics(memBlock: MemoryPool) {
+
+    let totalMem: number = this.numberOfUnits * this.memoryUnitSize;
+    let totalMemUsage: number = (memBlock.allocatedMemoryUnits /totalMem) * 100;
+
+    this.log(`${memBlock.type} MemBlock`);
+    this.log(`Number of Small Jobs: ${this.statsSmallJob}`);
+    this.log(`Number of Medium Jobs: ${this.statsMediumJob}`);
+    this.log(`Number of Large Jobs: ${this.statsLargeJob}`);
+    this.log(`Total Memory Defined: ${this.numberOfUnits * this.memoryUnitSize}`);
+    this.log(`Total Memory Allocated: ${memBlock.allocatedMemoryUnits}`);
+    this.log(`Percentage Memory Use: ${totalMemUsage}`);
+    this.log(`Total Internal Fragmentation: ${memBlock.internalFragmentation}`)
+    this.log (`Total External Fragmentation: ${memBlock.externalFragmentation}`);
+    this.log(`-----------------------------------`);
+  }
+
 }
 
 export { MemorySimulation };
