@@ -16,6 +16,11 @@ export enum AlgorithmType {
   BestFit = "BF",
   WorstFit = "WF",
 }
+
+export interface Location {
+  AlgType: AlgorithmType;
+  startLoc: number;
+}
   
 export enum EventType {
   Arrival = "Arrival",
@@ -36,10 +41,7 @@ export interface HeapElement {
   heapMemorySize: number;
   memoryUnits: number;
   heapLifeTime: number | null;
-  locationFF: number | null;
-  locationNF: number | null;
-  locationWF: number | null;
-  locationBF: number | null;
+  HeapLoc: Array<Location>;
   status: HeapStatus;
 }
   
@@ -51,8 +53,8 @@ export interface Job {
   stackSize: number;
   heapElements: Array<HeapElement>;
   arrivalTime: number;
-  codeLocation: number | null;
-  stackLocation: number | null;
+  codeLoc: Array<Location>
+  stackLoc: Array<Location>
 }
   
 export  interface MemoryBlock {
@@ -76,6 +78,14 @@ export class MemoryPool {
     this.type = type;
     this.totalMemoryUnits = totalSize;
     this.freeMemoryUnits = totalSize;
+    for (let i:number = 0; i < totalSize; i++) {
+      let MemBlock: MemoryBlock = {
+        location: i,
+        size: 8,
+        free: true
+      }
+      this.memoryBlocks.push(MemBlock);
+    }
   }
 
   public logPool(): Array<string> {
