@@ -16,7 +16,8 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "strictPropertyInitialization": false,
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "sourceMap": true
   },
   "include": ["src"]
 }

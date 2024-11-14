@@ -9,28 +9,28 @@ export enum HeapStatus {
   Allocated = "ALLOCATED",
   Freed = "FREED",
 }
-  
+
 export enum AlgorithmType {
   FirstFit = "FF",
   NextFit = "NF",
   BestFit = "BF",
   WorstFit = "WF",
 }
-  
+
 export enum EventType {
   Arrival = "Arrival",
   Termination = "Termination",
   HeapAllocation = "HA",
   HeapTermination = "HT",
 }
-  
+
 export interface Event {
   type: EventType;
   job: Job;
   arrivalTime: number;
   heapElement: HeapElement | null;
 }
-  
+
 export interface HeapElement {
   id: number;
   heapMemorySize: number;
@@ -42,7 +42,7 @@ export interface HeapElement {
   locationBF: number | null;
   status: HeapStatus;
 }
-  
+
 export interface Job {
   type: JobType;
   id: number;
@@ -54,13 +54,13 @@ export interface Job {
   codeLocation: number | null;
   stackLocation: number | null;
 }
-  
-export  interface MemoryBlock {
-  location: number;
+
+export interface MemoryBlock {
   size: number;
+  allocatedSize: number;
   free: boolean;
 }
-  
+
 export class MemoryPool {
   memoryBlocks: Array<MemoryBlock> = [];
   type: AlgorithmType;
@@ -72,10 +72,19 @@ export class MemoryPool {
   internalFragmentation: number = 0; //Tracks wasted space within allocated memory units.
   externalFragmentation: number = 0; //Tracks scattered free blocks that cannot satisfy a request.
 
-  constructor(type: AlgorithmType, totalSize: number) {
+  constructor(type: AlgorithmType, totalSize: number, memoryUnitSize: number) {
     this.type = type;
     this.totalMemoryUnits = totalSize;
     this.freeMemoryUnits = totalSize;
+
+    for (var i = 0; i < this.totalMemoryUnits; i++) {
+      var newBlock: MemoryBlock = {
+        allocatedSize: 0,
+        size: memoryUnitSize,
+        free: true,
+      };
+      this.memoryBlocks.push(newBlock);
+    }
   }
 
   public logPool(): Array<string> {
@@ -87,10 +96,10 @@ export class MemoryPool {
 
       let rowString = "[ ";
       rowBlocks.forEach((block, index) => {
-          rowString += `[${block.free ? " " : "X"}] `;
-          if (index < rowBlocks.length - 1) {
-              rowString += "| ";
-          }
+        rowString += `[${block.free ? " " : "X"}] `;
+        if (index < rowBlocks.length - 1) {
+          rowString += "| ";
+        }
       });
       rowString += "]";
 
