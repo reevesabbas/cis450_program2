@@ -1,5 +1,6 @@
 import { memo, useState } from "react";
 import { MemorySimulation } from "./Simulator";
+import Tester from "./TestAlgorithms";
 
 function App() {
   const [jobAllocation, setJobAllocation] = useState("");
@@ -122,10 +123,13 @@ function App() {
             >
               Run Simulation
             </button>
+            <div>
+            </div>
           </div>
         </div>
       </div>
     </div>
+  
   )
 }
 
