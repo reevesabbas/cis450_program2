@@ -10,26 +10,16 @@ function App() {
   const [completedInput, setCompletedInput] = useState(false);
   const [simulation, setSimulation] = useState<MemorySimulation | null>(null);
 
-  const startSimulation = (jobAllocation: string, memoryUnitSize: number, numberOfUnits: number, lostObjects: boolean): void => {
+  const startSimulation = (jobAllocation: string, memoryUnitSize: number, numberOfUnits: number, lostObjects: boolean, callBackFn: Function): void => {
     const jobAllocations = jobAllocation.trim().split("\n");
     const smallJobPercentage = parseInt(jobAllocations.shift()!);
     const mediumJobPercentage = parseInt(jobAllocations.shift()!);
     const largeJobPercentage = parseInt(jobAllocations.shift()!);
     const newSimulation = new MemorySimulation(smallJobPercentage, mediumJobPercentage, largeJobPercentage, memoryUnitSize, numberOfUnits, lostObjects);
-    setSimulation(newSimulation);
     newSimulation.startSimulation();
+    setSimulation(newSimulation);
+    callBackFn();
   };
-
-  useEffect(() => {
-    if (simulation !== null) {
-      const output = simulation!.logLines.join("\r\n");
-      const element = document.createElement("a");
-      const file = new Blob([output], { type: "text/plain" });
-      element.href = URL.createObjectURL(file);
-      element.download = testName;
-      element.click();
-    }
-  }, [simulation]);
 
   return (
     <div className="flex-1 h-screen w-screen place-content-center bg-[#0c1227]">
@@ -99,7 +89,16 @@ function App() {
             <button
               className="bg-white p-1 rounded-sm"
               onClick={() => {
-                startSimulation(jobAllocation, memoryUnitSize, numberOfUnits, lostObjects);
+                startSimulation(jobAllocation, memoryUnitSize, numberOfUnits, lostObjects, () => {
+                  if (simulation !== null) {
+                    const output = simulation!.logLines.join("\r\n");
+                    const element = document.createElement("a");
+                    const file = new Blob([output], { type: "text/plain" });
+                    element.href = URL.createObjectURL(file);
+                    element.download = testName;
+                    element.click();
+                  }
+                });
               }}
             >
               Run Simulation

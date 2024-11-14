@@ -174,12 +174,19 @@ class MemorySimulation {
 
       switch (currentEvent?.type) {
         case EventType.Arrival: {
+          this.memoryPools.forEach((pool) => {
+            pool.allocatePool(currentEvent.job.codeSize);
+            pool.allocatePool(currentEvent.job.stackSize);
+          });
           break;
         }
         case EventType.Termination: {
           break;
         }
         case EventType.HeapAllocation: {
+          this.memoryPools.forEach((pool) => {
+            pool.allocatePool(currentEvent.heapElement!.memoryUnits);
+          });
           break;
         }
         case EventType.HeapTermination: {
@@ -211,9 +218,8 @@ class MemorySimulation {
   }
 
   public logStatistics(memBlock: MemoryPool) {
-
     let totalMem: number = this.numberOfUnits * this.memoryUnitSize;
-    let totalMemUsage: number = (memBlock.allocatedMemoryUnits /totalMem) * 100;
+    let totalMemUsage: number = (memBlock.allocatedMemoryUnits / totalMem) * 100;
 
     this.log(`${memBlock.type} MemBlock`);
     this.log(`Number of Small Jobs: ${this.statsSmallJob}`);
@@ -222,11 +228,10 @@ class MemorySimulation {
     this.log(`Total Memory Defined: ${this.numberOfUnits * this.memoryUnitSize}`);
     this.log(`Total Memory Allocated: ${memBlock.allocatedMemoryUnits}`);
     this.log(`Percentage Memory Use: ${totalMemUsage}`);
-    this.log(`Total Internal Fragmentation: ${memBlock.internalFragmentation}`)
-    this.log (`Total External Fragmentation: ${memBlock.externalFragmentation}`);
+    this.log(`Total Internal Fragmentation: ${memBlock.internalFragmentation}`);
+    this.log(`Total External Fragmentation: ${memBlock.externalFragmentation}`);
     this.log(`-----------------------------------`);
   }
-
 }
 
 export { MemorySimulation };
