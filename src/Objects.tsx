@@ -17,6 +17,11 @@ export enum AlgorithmType {
   WorstFit = "WF",
 }
 
+export interface Location {
+  AlgType: AlgorithmType;
+  startLoc: number;
+}
+
 export enum EventType {
   Arrival = "Arrival",
   Termination = "Termination",
@@ -36,10 +41,7 @@ export interface HeapElement {
   heapMemorySize: number;
   memoryUnits: number;
   heapLifeTime: number | null;
-  locationFF: number | null;
-  locationNF: number | null;
-  locationWF: number | null;
-  locationBF: number | null;
+  HeapLoc: Array<Location>;
   status: HeapStatus;
 }
 
@@ -51,8 +53,8 @@ export interface Job {
   stackSize: number;
   heapElements: Array<HeapElement>;
   arrivalTime: number;
-  codeLocation: number | null;
-  stackLocation: number | null;
+  codeLoc: Array<Location>;
+  stackLoc: Array<Location>;
 }
 
 export interface MemoryBlock {

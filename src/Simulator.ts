@@ -45,7 +45,7 @@ class MemorySimulation {
         heapMemorySize: randomHeap,
         memoryUnits: heapUnitSize,
         heapLifeTime: null,
-        locationFF: null, locationBF: null, locationWF: null, locationNF: null,
+        HeapLoc: [],
         status: HeapStatus.Start, };
       currentJob.heapElements.push(heapObject);
     }
@@ -68,8 +68,8 @@ class MemorySimulation {
       runTime: runTime,
       arrivalTime: arrivalTime,
       heapElements: [],
-      codeLocation: null,
-      stackLocation: null,
+      codeLoc: [],
+      stackLoc: [],
     };
     return newJob;
   }

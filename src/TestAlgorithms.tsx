@@ -14,17 +14,21 @@ function Tester () {
     
 
     return (
-     <div>
-         {logPool};
-    </div>
-    )
-    
+        
+        <div>
+            {logPool}
+        </div>
+        
+        
+    );
+}
+
     
 
     
 
    
-} 
+
 
 
 export default Tester
