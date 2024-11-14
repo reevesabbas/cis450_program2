@@ -20,6 +20,7 @@ export enum AlgorithmType {
 export interface Location {
   AlgType: AlgorithmType;
   startLoc: number;
+  endLoc: number;
 }
 
 export enum EventType {
@@ -61,53 +62,4 @@ export interface MemoryBlock {
   size: number;
   allocatedSize: number;
   free: boolean;
-}
-
-export class MemoryPool {
-  memoryBlocks: Array<MemoryBlock> = [];
-  type: AlgorithmType;
-  totalMemoryUnits: number;
-  freeMemoryUnits: number;
-  allocatedMemoryUnits: number = 0;
-  totalJobsProcessed: number = 0;
-  nextFitPointer: number = 0;
-  internalFragmentation: number = 0; //Tracks wasted space within allocated memory units.
-  externalFragmentation: number = 0; //Tracks scattered free blocks that cannot satisfy a request.
-
-  constructor(type: AlgorithmType, totalSize: number, memoryUnitSize: number) {
-    this.type = type;
-    this.totalMemoryUnits = totalSize;
-    this.freeMemoryUnits = totalSize;
-
-    for (var i = 0; i < this.totalMemoryUnits; i++) {
-      var newBlock: MemoryBlock = {
-        allocatedSize: 0,
-        size: memoryUnitSize,
-        free: true,
-      };
-      this.memoryBlocks.push(newBlock);
-    }
-  }
-
-  public logPool(): Array<string> {
-    const rows: string[] = [];
-    const rowSize = 15;
-
-    for (let i = 0; i < this.memoryBlocks.length; i += rowSize) {
-      const rowBlocks = this.memoryBlocks.slice(i, i + rowSize);
-
-      let rowString = "[ ";
-      rowBlocks.forEach((block, index) => {
-        rowString += `[${block.free ? " " : "X"}] `;
-        if (index < rowBlocks.length - 1) {
-          rowString += "| ";
-        }
-      });
-      rowString += "]";
-
-      rows.push(rowString);
-    }
-
-    return rows;
-  }
 }
