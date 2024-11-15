@@ -153,7 +153,41 @@ class MemorySimulation {
     });
     this.eventsQueue.sort((eventA, eventB) => eventA.arrivalTime - eventB.arrivalTime);
   }
+  public logStatistics(memoryPool: MemoryPool) {
+    let totalMem: number = this.numberOfUnits * this.memoryUnitSize;
+    let totalMemUsage: number = (memoryPool.allocatedMemoryUnits / totalMem) * 100;
+    const FinalMap : Map<number,number> = memoryPool.GenerateMap();
+    let externalFragmentation: number = FinalMap.size;
+    let smallestFree = Infinity;
+    let largestFree = -Infinity; // Start with an infinitely large value
+    
+    for (const value of FinalMap.values()) {
+        if (value < smallestFree) {
+    smallestFree = value;
+  }
+}
 
+  for (const value of FinalMap.values()) {
+    if (value > largestFree) {
+      largestFree = value;
+}
+}
+
+    this.log(`${memoryPool.type} Pool`);
+    this.log(`Number of Small Jobs: ${this.statsSmallJob}`);
+    this.log(`Number of Medium Jobs: ${this.statsMediumJob}`);
+    this.log(`Number of Large Jobs: ${this.statsLargeJob}`);
+    this.log(`Total Memory Defined: ${this.numberOfUnits * this.memoryUnitSize}`);
+    this.log(`Total Memory Allocated: ${memoryPool.allocatedMemoryUnits}`);
+    this.log(`Percentage Memory Use: ${totalMemUsage}`);
+    this.log(`Total Internal Fragmentation: ${memoryPool.totalInternalFragmentation}`);
+    this.log(`Total External Fragmentation: ${externalFragmentation}`);
+    this.log(`Smallest Free Space: ${smallestFree}`);
+    this.log(`Largest Free Space: ${largestFree}`);
+    this.log(`Failed Allocations: ${memoryPool.failedAllocations}`);
+    this.log(`Algorithm Operations: ${memoryPool.AlgorithmOperations}`);
+    this.log(`-----------------------------------`);
+  }
   public startSimulation(): void {
     this.fillSimulationJobs();
     this.fillEventQueue();
@@ -249,48 +283,16 @@ class MemorySimulation {
     }
 
     //End of loop, log each pool stats here.
-    console.log(this.eventsQueue);
+    this.memoryPools.forEach((pool) => {
+      this.logStatistics(pool);
+    });
   }
 
   public log(message: string): void {
     this.logLines.push(message);
   }
 
-  public logStatistics(memoryPool: MemoryPool) {
-    let totalMem: number = this.numberOfUnits * this.memoryUnitSize;
-    let totalMemUsage: number = (memoryPool.allocatedMemoryUnits / totalMem) * 100;
-    const FinalMap : Map<number,number> = memoryPool.GenerateMap();
-    let externalFragmentation: number = FinalMap.size;
-    let smallestFree = Infinity;
-    let largestFree = -Infinity; // Start with an infinitely large value
-    
-    for (const value of FinalMap.values()) {
-        if (value < smallestFree) {
-    smallestFree = value;
-  }
-}
-
-  for (const value of FinalMap.values()) {
-    if (value > largestFree) {
-      largestFree = value;
-}
-}
-
-    this.log(`${memoryPool.type} Pool`);
-    this.log(`Number of Small Jobs: ${this.statsSmallJob}`);
-    this.log(`Number of Medium Jobs: ${this.statsMediumJob}`);
-    this.log(`Number of Large Jobs: ${this.statsLargeJob}`);
-    this.log(`Total Memory Defined: ${this.numberOfUnits * this.memoryUnitSize}`);
-    this.log(`Total Memory Allocated: ${memoryPool.allocatedMemoryUnits}`);
-    this.log(`Percentage Memory Use: ${totalMemUsage}`);
-    this.log(`Total Internal Fragmentation: ${memoryPool.totalInternalFragmentation}`);
-    this.log(`Total External Fragmentation: ${externalFragmentation}`);
-    this.log(`Smallest Free Space: ${smallestFree}`);
-    this.log(`Largest Free Space: ${largestFree}`);
-    this.log(`Failed Allocations: ${memoryPool.failedAllocations}`);
-    this.log(`Algorithm Operations: ${memoryPool.AlgorithmOperations}`);
-    this.log(`-----------------------------------`);
-  }
+ 
 }
 
 export { MemorySimulation };
