@@ -6,11 +6,13 @@ export class MemoryPool {
   totalMemoryUnits: number;
   freeMemoryUnits: number;
   allocatedMemoryUnits: number = 0;
-  totalMemoryUnitsUsed: number = 0;
+  requiredMemoryUnits: number = 0;
   totalJobsProcessed: number = 0;
   nextFitPointer: number = 0;
-  internalFragmentation: number = 0; //Tracks wasted space within allocated memory units.
-  externalFragmentation: number = 0; //Tracks scattered free blocks that cannot satisfy a request.
+  failedAllocations: number = 0;
+  AlgorithmOperations: number = 0;
+  totalInternalFragmentation: number = 0; //Tracks wasted space within allocated memory units.
+  totalexternalFragmentation: number = 0; //Tracks scattered free blocks that cannot satisfy a request.
 
   constructor(type: AlgorithmType, totalSize: number, memoryUnitSize: number) {
     this.type = type;
@@ -27,76 +29,29 @@ export class MemoryPool {
     }
   }
 
-  public handlePoolAllocation(size: number): number | null {
+  public allocatePool(size: number): void {
     switch (this.type) {
       case AlgorithmType.FirstFit: {
-        return this.mallocFF(size);
+        this.mallocFF(size);
+        break;
       }
       case AlgorithmType.NextFit: {
-        return this.mallocNF(size);
+        this.mallocNF(size);
+        break;
       }
       case AlgorithmType.BestFit: {
-        return this.mallocBF(size);
+        this.mallocBF(size);
+        break;
       }
       case AlgorithmType.WorstFit: {
-        return this.mallocWF(size);
-      }
-      default: return null //Error with pool structure?
-    }
-  }
-
-  public freeFF(location: number): void {
-    
-  }
-
-  public mallocFF(sizeRequested: number): number | null {
-    const startingPosition = 0;
-    let freeUnitCount = 0;
-
-    for (let i = startingPosition; i < this.memoryBlocks.length-1; i++) {
-      const memoryBlock = this.memoryBlocks[i];
-      if (memoryBlock.free) {
-        freeUnitCount += memoryBlock.size;
-        if (freeUnitCount >= sizeRequested) {
-          const finalBlockLoc = i;
-          const requiredBlocks = Math.ceil(sizeRequested / memoryBlock.size);
-          for (let n = finalBlockLoc; n >= requiredBlocks - (finalBlockLoc+1); n--) {
-            this.memoryBlocks[n].free = false;
-          }
-          return i - finalBlockLoc;
-        }
-      } else {
-        freeUnitCount = 0;
+        this.mallocWF(size);
+        break;
       }
     }
-    return null;
   }
 
-  public mallocNF(size: number): number | null {
-    const startingPosition = this.nextFitPointer;
-    let freeUnitCount = 0;
-
-    for (let i = startingPosition; i < this.memoryBlocks.length-1; i++) {
-      const memoryBlock = this.memoryBlocks[i];
-      if (memoryBlock.free) {
-        freeUnitCount += memoryBlock.size;
-        if (freeUnitCount === size) {
-          for (let i = 0; i < size; i++) {
-            this.memoryBlocks[i].free = false;
-          }
-          this.nextFitPointer = i;
-          return i;
-        }
-      } else {
-        freeUnitCount = 0;
-      }
-    }
-    return null;
-  }
-
-  public mallocWF(size: number): number | null {
+  public GenerateMap(): Map<number,number>  {
     const freeBlocksMap: Map<number, number> = new Map();
-
     for (let i = 0; i < this.memoryBlocks.length; i++) {
       const currBlock = this.memoryBlocks[i];
       if (currBlock.free) {
@@ -111,7 +66,62 @@ export class MemoryPool {
         freeBlocksMap.set(startLocation, blockSize);
       }
     }
+    return freeBlocksMap;
+  }
 
+  public mallocFF(sizeRequested: number): number | null {
+    this.requiredMemoryUnits += sizeRequested;
+    const startingPosition = 0;
+    let freeUnitCount = 0;
+
+    for (let i = startingPosition; i < this.memoryBlocks.length-1; i++) {
+      const memoryBlock = this.memoryBlocks[i];
+      if (memoryBlock.free) {
+        freeUnitCount += memoryBlock.size;
+        if (freeUnitCount >= sizeRequested) {
+          this.allocatedMemoryUnits += freeUnitCount;
+          const finalBlockLoc = i;
+          const requiredBlocks = Math.ceil(sizeRequested / memoryBlock.size);
+          for (let n = finalBlockLoc; n >= requiredBlocks - (finalBlockLoc+1); n--) {
+            this.memoryBlocks[n].free = false;
+          }
+          return i - finalBlockLoc;
+        }
+      } else {
+        freeUnitCount = 0;
+      }
+    }
+    this.failedAllocations++;
+    return null;
+  }
+
+  public mallocNF(size: number): number | null {
+    this.requiredMemoryUnits += size;
+    const startingPosition = this.nextFitPointer;
+    let freeUnitCount = 0;
+
+    for (let i = startingPosition; i < this.memoryBlocks.length-1; i++) {
+      const memoryBlock = this.memoryBlocks[i];
+      if (memoryBlock.free) {
+        freeUnitCount += memoryBlock.size;
+        if (freeUnitCount >= size) {
+          this.allocatedMemoryUnits += freeUnitCount;
+          for (let i = 0; i < size; i++) {
+            this.memoryBlocks[i].free = false;
+          }
+          this.nextFitPointer = i;
+          return i;
+        }
+      } else {
+        freeUnitCount = 0;
+      }
+    }
+    return null;
+  }
+
+  public mallocWF(size: number): number | null {
+    const freeBlocksMap : Map<number,number> = this.GenerateMap();
+    this.requiredMemoryUnits += size;
     let largestFreeBlockStart: number | null = null;
     let largestBlockSize = 0;
 
@@ -125,7 +135,7 @@ export class MemoryPool {
     if (largestFreeBlockStart === null) {
       return null;
     }
-
+    this.allocatedMemoryUnits += largestBlockSize;
     let remainingSize = size;
     for (let i = largestFreeBlockStart; remainingSize > 0 && i < this.memoryBlocks.length; i++) {
       if (this.memoryBlocks[i].free) {
@@ -138,6 +148,7 @@ export class MemoryPool {
   }
 
   public mallocBF(size: number): number | null {
+    this.requiredMemoryUnits += size;
     const freeBlocksMap: Map<number, number> = new Map();
 
     for (let i = 0; i < this.memoryBlocks.length; i++) {
@@ -169,6 +180,7 @@ export class MemoryPool {
       return null;
     }
 
+    this.allocatedMemoryUnits += smallestBlockSize;
     let remainingSize = size;
     for (let i = smallestFreeBlockStart; remainingSize > 0 && i < this.memoryBlocks.length; i++) {
       if (this.memoryBlocks[i].free) {
