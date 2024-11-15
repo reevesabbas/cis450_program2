@@ -7,6 +7,7 @@ export class MemoryPool {
   freeMemoryUnits: number;
   allocatedMemoryUnits: number = 0;
   requiredMemoryUnits: number = 0;
+  memUnitSize:number  = 0;
   totalJobsProcessed: number = 0;
   nextFitPointer: number = 0;
   failedAllocations: number = 0;
@@ -18,6 +19,7 @@ export class MemoryPool {
     this.type = type;
     this.totalMemoryUnits = totalSize;
     this.freeMemoryUnits = totalSize;
+    this.memUnitSize = memoryUnitSize;
 
     for (var i = 0; i < this.totalMemoryUnits; i++) {
       var newBlock: MemoryBlock = {
@@ -67,123 +69,111 @@ export class MemoryPool {
     return freeBlocksMap;
   }
 
-  public mallocFF(sizeRequested: number): number | null {
+  public mallocNF(sizeRequested: number): number | null {
+    let TempMap : Map<number,number> = this.GenerateMap();
     this.requiredMemoryUnits += sizeRequested;
-    const startingPosition = 0;
-    let freeUnitCount = 0;
 
-    for (let i = startingPosition; i < this.memoryBlocks.length-1; i++) {
+    for (const [startLocation, blockSize] of TempMap.entries()) {
       this.AlgorithmOperations++;
-      const memoryBlock = this.memoryBlocks[i];
-      if (memoryBlock.free) {
-        freeUnitCount += memoryBlock.size;
-        if (freeUnitCount >= sizeRequested) {
-          this.allocatedMemoryUnits += freeUnitCount;
-          const finalBlockLoc = i;
-          const requiredBlocks = Math.ceil(sizeRequested / memoryBlock.size);
-          for (let n = finalBlockLoc; n >= requiredBlocks - (finalBlockLoc+1); n--) {
-            this.AlgorithmOperations++;
-            this.memoryBlocks[n].free = false;
-          }
-          return i - finalBlockLoc;
+      if (blockSize >= sizeRequested && startLocation >= this.nextFitPointer) {
+        let allocSize : number = Math.ceil(sizeRequested / this.memUnitSize) * this.memUnitSize;
+        this.allocatedMemoryUnits += allocSize;
+        this.nextFitPointer = startLocation;
+        let i: number = this.nextFitPointer;
+        let tempSize : number = allocSize
+        while (tempSize > 0) {
+          this.memoryBlocks[i].free = false;
+          tempSize -= this.memUnitSize;
+          i++;
         }
-      } else {
-        freeUnitCount = 0;
+        return startLocation;
+      }
+    }
+    this.failedAllocations++;
+    return null;
+  }
+  
+
+  public mallocFF(sizeRequested: number): number | null {
+    let TempMap : Map<number,number> = this.GenerateMap();
+    this.requiredMemoryUnits += sizeRequested;
+
+    for (const [startLocation, blockSize] of TempMap.entries()) {
+      this.AlgorithmOperations++;
+      if (blockSize >= sizeRequested) {
+        let allocSize : number = Math.ceil(sizeRequested / this.memUnitSize) * this.memUnitSize;
+        this.allocatedMemoryUnits += allocSize;
+        let i : number = startLocation;
+        let tempSize: number = allocSize;
+        while (tempSize > 0) {
+          this.memoryBlocks[i].free = false;
+          tempSize -= this.memUnitSize;
+          i++;
+        }
+        return startLocation;
       }
     }
     this.failedAllocations++;
     return null;
   }
 
-  public mallocNF(size: number): number | null {
-    this.requiredMemoryUnits += size;
-    const startingPosition = this.nextFitPointer;
-    let freeUnitCount = 0;
+  public mallocWF(sizeRequested: number): number | null {
+    let TempMap : Map<number,number> = this.GenerateMap();
+    this.requiredMemoryUnits += sizeRequested;
+    let largestBlockSize : number = 0, startLoc : number = 0;
 
-    for (let i = startingPosition; i < this.memoryBlocks.length-1; i++) {
+    for (const [startLocation, blockSize] of TempMap.entries()) {
       this.AlgorithmOperations++;
-      const memoryBlock = this.memoryBlocks[i];
-      if (memoryBlock.free) {
-        freeUnitCount += memoryBlock.size;
-        if (freeUnitCount >= size) {
-          this.allocatedMemoryUnits += freeUnitCount;
-          for (let i = 0; i < size; i++) {
-            this.AlgorithmOperations++;
-            this.memoryBlocks[i].free = false;
-          }
-          this.nextFitPointer = i;
-          return i;
-        }
-      } else {
-        freeUnitCount = 0;
-      }
-    }
-    this.failedAllocations++;
-    return null;
-  }
-
-  public mallocWF(size: number): number | null {
-    const freeBlocksMap : Map<number,number> = this.GenerateMap();
-    this.requiredMemoryUnits += size;
-    let largestFreeBlockStart: number | null = null;
-    let largestBlockSize = 0;
-
-    for (const [startLocation, blockSize] of freeBlocksMap.entries()) {
-      this.AlgorithmOperations++;
-      if (blockSize >= size && blockSize > largestBlockSize) {
-        largestFreeBlockStart = startLocation;
+      if (blockSize >= sizeRequested && blockSize > largestBlockSize) {
         largestBlockSize = blockSize;
+        startLoc = startLocation;
       }
     }
-
-    if (largestFreeBlockStart === null) {
-      this.failedAllocations++;
-      return null;
-    }
-    this.allocatedMemoryUnits += largestBlockSize;
-    let remainingSize = size;
-    for (let i = largestFreeBlockStart; remainingSize > 0 && i < this.memoryBlocks.length; i++) {
-      this.AlgorithmOperations++;
-      if (this.memoryBlocks[i].free) {
+    if (largestBlockSize > 0) {
+      let allocSize : number = Math.ceil(sizeRequested / this.memUnitSize) * this.memUnitSize;
+      this.allocatedMemoryUnits += allocSize;
+      let i :number = startLoc;
+      let tempSize: number = allocSize;
+      while (tempSize > 0) {
         this.memoryBlocks[i].free = false;
-        remainingSize -= this.memoryBlocks[i].size;
+        tempSize -= this.memUnitSize;
+        i++;
       }
-    }
 
-    return largestFreeBlockStart;
+      return startLoc;
+    }
+    else {
+      this.failedAllocations++;
+      return null;}
   }
+  public mallocBF(sizeRequested: number): number | null {
+    let TempMap : Map<number,number> = this.GenerateMap();
+    this.requiredMemoryUnits += sizeRequested;
+    let smallestBlockSize : number = Infinity, startLoc : number = 0;
 
-  public mallocBF(size: number): number | null {
-    this.requiredMemoryUnits += size;
-    const freeBlocksMap: Map<number, number> = this.GenerateMap();
-
-    let smallestFreeBlockStart: number | null = null;
-    let smallestBlockSize = Infinity;
-
-    for (const [startLocation, blockSize] of freeBlocksMap.entries()) {
+    for (const [startLocation, blockSize] of TempMap.entries()) {
       this.AlgorithmOperations++;
-      if (blockSize >= size && blockSize < smallestBlockSize) {
-        smallestFreeBlockStart = startLocation;
+      if (blockSize >= sizeRequested && blockSize < smallestBlockSize) {
         smallestBlockSize = blockSize;
+        startLoc = startLocation;
       }
     }
-
-    if (smallestFreeBlockStart === null) {
-      this.failedAllocations++;
-      return null;
-    }
-
-    this.allocatedMemoryUnits += smallestBlockSize;
-    let remainingSize = size;
-    for (let i = smallestFreeBlockStart; remainingSize > 0 && i < this.memoryBlocks.length; i++) {
-      this.AlgorithmOperations++;
-      if (this.memoryBlocks[i].free) {
+    if (smallestBlockSize < Infinity) {
+      let allocSize : number = Math.ceil(sizeRequested / this.memUnitSize) * this.memUnitSize;
+      this.allocatedMemoryUnits += allocSize;
+      let i :number = startLoc;
+      let tempSize: number = allocSize;
+      while (tempSize > 0) {
         this.memoryBlocks[i].free = false;
-        remainingSize -= this.memoryBlocks[i].size;
+        tempSize -= this.memUnitSize;
+        i++;
       }
-    }
 
-    return smallestFreeBlockStart;
+      return startLoc;
+    }
+    else {
+      this.failedAllocations++;
+      return null;}
   }
 
   public logPool(): Array<string> {
