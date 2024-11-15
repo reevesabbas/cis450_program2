@@ -29,23 +29,21 @@ export class MemoryPool {
     }
   }
 
-  public allocatePool(size: number): void {
+  public freeFF(location: number): void {}
+
+  public handlePoolAllocation(size: number): number | null {
     switch (this.type) {
       case AlgorithmType.FirstFit: {
-        this.mallocFF(size);
-        break;
+        return this.mallocFF(size);
       }
       case AlgorithmType.NextFit: {
-        this.mallocNF(size);
-        break;
+        return this.mallocNF(size);
       }
       case AlgorithmType.BestFit: {
-        this.mallocBF(size);
-        break;
+        return this.mallocBF(size);
       }
       case AlgorithmType.WorstFit: {
-        this.mallocWF(size);
-        break;
+        return this.mallocWF(size);
       }
     }
   }
@@ -69,23 +67,25 @@ export class MemoryPool {
     return freeBlocksMap;
   }
 
-  public mallocFF(size: number): number | null {
-    this.requiredMemoryUnits += size;
+  public mallocFF(sizeRequested: number): number | null {
+    this.requiredMemoryUnits += sizeRequested;
     const startingPosition = 0;
     let freeUnitCount = 0;
 
-    for (let i = 0; i < this.memoryBlocks.length; i++) {
+    for (let i = startingPosition; i < this.memoryBlocks.length-1; i++) {
       this.AlgorithmOperations++;
-      const memoryBlock = this.memoryBlocks[startingPosition];
+      const memoryBlock = this.memoryBlocks[i];
       if (memoryBlock.free) {
         freeUnitCount += memoryBlock.size;
-        if (freeUnitCount >= size) {
+        if (freeUnitCount >= sizeRequested) {
           this.allocatedMemoryUnits += freeUnitCount;
-          for (let i = 0; i < size; i++) {
-            this.memoryBlocks[i].free = false;
+          const finalBlockLoc = i;
+          const requiredBlocks = Math.ceil(sizeRequested / memoryBlock.size);
+          for (let n = finalBlockLoc; n >= requiredBlocks - (finalBlockLoc+1); n--) {
             this.AlgorithmOperations++;
+            this.memoryBlocks[n].free = false;
           }
-          return i;
+          return i - finalBlockLoc;
         }
       } else {
         freeUnitCount = 0;
@@ -100,9 +100,9 @@ export class MemoryPool {
     const startingPosition = this.nextFitPointer;
     let freeUnitCount = 0;
 
-    for (let i = 0; i < this.memoryBlocks.length; i++) {
+    for (let i = startingPosition; i < this.memoryBlocks.length-1; i++) {
       this.AlgorithmOperations++;
-      const memoryBlock = this.memoryBlocks[startingPosition];
+      const memoryBlock = this.memoryBlocks[i];
       if (memoryBlock.free) {
         freeUnitCount += memoryBlock.size;
         if (freeUnitCount >= size) {
