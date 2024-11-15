@@ -271,6 +271,8 @@ class MemorySimulation {
     this.log(`Total External Fragmentation: ${externalFragmentation}`);
     this.log(`Smallest Free Space: ${smallestFree}`);
     this.log(`Largest Free Space: ${largestFree}`);
+    this.log(`Failed Allocations: ${memoryPool.failedAllocations}`);
+    this.log(`Algorithm Operations: ${memoryPool.AlgorithmOperations}`);
     this.log(`-----------------------------------`);
   }
 }
