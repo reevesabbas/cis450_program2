@@ -45,7 +45,7 @@ function App() {
               onChange={(event) => {
                 setJobAllocation(event.target.value);
               }}
-              className="bg-[#fdfdff] rounded-sm h-24 w-100 mb-5"
+              className="bg-[#fdfdff] rounded-sm h-24 w-100"
               name={"JobAllocationInput"}
               required
             />
@@ -89,7 +89,7 @@ function App() {
             />
           </div>
           <div>
-            <div className="flex flex-col col-span-1 mb-5">
+            <div className="flex flex-col col-span-1">
               <label className="text-white">Test Name</label>
              <input
               onChange={(event) => {
@@ -101,28 +101,28 @@ function App() {
               required
             />
             </div>
-            <button
-              className="bg-white p-1 rounded-sm"
-              onClick={() => {
-                startSimulation(
-                  jobAllocation,
-                  memoryUnitSize,
-                  numberOfUnits,
-                  lostObjects
-                );
-                setTimeout(() => {
-                  const output = simulation!.logLines.join("\r\n");
-                  const element = document.createElement("a");
-                  const file = new Blob([output], {type: 'text/plain'});
-                  element.href = URL.createObjectURL(file);
-                  element.download = testName;
-                  element.click();
-                }, 500)
-              }}
-            >
-              Run Simulation
-            </button>
           </div>
+          <button
+            className="bg-white p-1 rounded-sm"
+            onClick={() => {
+              startSimulation(
+                jobAllocation,
+                memoryUnitSize,
+                numberOfUnits,
+                lostObjects
+              );
+              setTimeout(() => {
+                const output = simulation!.logLines.join("\r\n");
+                const element = document.createElement("a");
+                const file = new Blob([output], {type: 'text/plain'});
+                element.href = URL.createObjectURL(file);
+                element.download = testName;
+                element.click();
+              }, 500)
+            }}
+          >
+            Run Simulation
+          </button>
         </div>
       </div>
     </div>
