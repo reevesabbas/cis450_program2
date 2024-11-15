@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { MemorySimulation } from "./Simulator";
 
 function App() {
@@ -10,33 +10,20 @@ function App() {
   const [completedInput, setCompletedInput] = useState(false);
   const [simulation, setSimulation] = useState<MemorySimulation | null>(null);
 
-  const startSimulation = (
-    jobAllocation: string,
-    memoryUnitSize: number,
-    numberOfUnits: number,
-    lostObjects: boolean
-  ): void => {
+  const startSimulation = (jobAllocation: string, memoryUnitSize: number, numberOfUnits: number, lostObjects: boolean, callBackFn: Function): void => {
     const jobAllocations = jobAllocation.trim().split("\n");
     const smallJobPercentage = parseInt(jobAllocations.shift()!);
     const mediumJobPercentage = parseInt(jobAllocations.shift()!);
     const largeJobPercentage = parseInt(jobAllocations.shift()!);
-    const newSimulation = new MemorySimulation(
-      smallJobPercentage,
-      mediumJobPercentage,
-      largeJobPercentage,
-      memoryUnitSize,
-      numberOfUnits,
-      lostObjects
-    );
-    setSimulation(newSimulation);
+    const newSimulation = new MemorySimulation(smallJobPercentage, mediumJobPercentage, largeJobPercentage, memoryUnitSize, numberOfUnits, lostObjects);
     newSimulation.startSimulation();
+    setSimulation(newSimulation);
+    callBackFn();
   };
 
   return (
     <div className="flex-1 h-screen w-screen place-content-center bg-[#0c1227]">
-      <h1 className="text-white text-center text-2xl mb-20">
-        Welcome to Assignment 2 CIS 450
-      </h1>
+      <h1 className="text-white text-center text-2xl mb-20">Welcome to Assignment 2 CIS 450</h1>
       <div className="flex justify-center">
         <div className="flex-col col-span-1 space-y-5">
           <div className="flex flex-col col-span-1">
@@ -51,9 +38,7 @@ function App() {
             />
           </div>
           <div className="flex flex-col col-span-1">
-            <label className="text-white">
-              Enter Memory Unit Size (multiple of 8)
-            </label>
+            <label className="text-white">Enter Memory Unit Size (multiple of 8)</label>
             <input
               onChange={(event) => {
                 setMemoryUnitSize(parseInt(event.target.value));
@@ -91,42 +76,38 @@ function App() {
           <div>
             <div className="flex flex-col col-span-1">
               <label className="text-white">Test Name</label>
-             <input
-              onChange={(event) => {
-                setTestName(event.target.value);
-              }}
-              className="bg-[#fdfdff] rounded-sm"
-              name={"TestNameInput"}
-              type="text"
-              required
-            />
+              <input
+                onChange={(event) => {
+                  setTestName(event.target.value);
+                }}
+                className="bg-[#fdfdff] rounded-sm"
+                name={"TestNameInput"}
+                type="text"
+                required
+              />
             </div>
           </div>
-          <button
-            className="bg-white p-1 rounded-sm"
-            onClick={() => {
-              startSimulation(
-                jobAllocation,
-                memoryUnitSize,
-                numberOfUnits,
-                lostObjects
-              );
-              setTimeout(() => {
-                const output = simulation!.logLines.join("\r\n");
-                const element = document.createElement("a");
-                const file = new Blob([output], {type: 'text/plain'});
-                element.href = URL.createObjectURL(file);
-                element.download = testName;
-                element.click();
-              }, 500)
-            }}
-          >
+            <button
+              className="bg-white p-1 rounded-sm"
+              onClick={() => {
+                startSimulation(jobAllocation, memoryUnitSize, numberOfUnits, lostObjects, () => {
+                  if (simulation !== null) {
+                    const output = simulation!.logLines.join("\r\n");
+                    const element = document.createElement("a");
+                    const file = new Blob([output], { type: "text/plain" });
+                    element.href = URL.createObjectURL(file);
+                    element.download = testName;
+                    element.click();
+                  }
+                });
+              }}
+            >
             Run Simulation
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default App;
