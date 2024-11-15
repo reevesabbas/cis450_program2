@@ -37,7 +37,7 @@ class MemorySimulation {
   }
 
   public HeapGenerator(currentJob: Job, heapObjects: number) {
-    for (let i: number = 1; i <= heapObjects; i++) {
+    for (let i: number = 0; i < heapObjects; i++) {
       let randomHeap: number = this.GenerateRandomNum(20, 50);
       let heapUnitSize: number = Math.ceil(randomHeap / this.memoryUnitSize);
 
@@ -54,7 +54,6 @@ class MemorySimulation {
   }
 
   public createJob(type: JobType, code: number, stack: number, runTime: number, arrivalTime: number): Job {
-    this.totalNumOfJobs++;
     const newJob: Job = {
       id: this.totalNumOfJobs,
       type: type,
@@ -66,6 +65,7 @@ class MemorySimulation {
       codeLoc: [],
       stackLoc: [],
     };
+    this.totalNumOfJobs++;
     return newJob;
   }
 
@@ -182,11 +182,11 @@ class MemorySimulation {
           this.memoryPools.forEach((pool) => {
             const codeLoc = pool.handlePoolAllocation(currentJob.codeSize);
             const stackLoc = pool.handlePoolAllocation(currentJob.stackSize);
-            if (codeLoc && stackLoc) {
+            if (codeLoc !== null && stackLoc !== null) {
               this.jobsQueue[currentJob.id].codeLoc.push({AlgType: pool.type, startLoc: codeLoc});
               this.jobsQueue[currentJob.id].stackLoc.push({AlgType: pool.type, startLoc: stackLoc});
               this.log(`${this.time}: Job ${currentJob.id} allocated Code at location ${codeLoc}, allocated Stack at location ${stackLoc} in ${pool.type} pool`);
-            } else if (codeLoc) {
+            } else if (codeLoc !== null) {
               this.log(`${this.time}: ERROR ALLOCATING Stack for Job ${currentJob.id} in ${pool.type} pool`);
             } else {
               this.log(`${this.time}: ERROR ALLOCATING Code for Job ${currentJob.id} in ${pool.type} pool`);
@@ -196,18 +196,30 @@ class MemorySimulation {
         }
         case EventType.Termination: {
           this.memoryPools.forEach((pool) => {
-            const codeLoc = currentJob.codeLoc.find((loc) => loc.AlgType == pool.type);
-            const stackLoc = currentJob.stackLoc.find((loc) => loc.AlgType == pool.type);
-            pool.freeFF(codeLoc!.startLoc);
-            pool.freeFF(stackLoc!.startLoc);
-            this.log(`${this.time}: Job ${currentJob.id} freed Code at location ${codeLoc}, freed Stack at location ${stackLoc} in ${pool.type} pool`);
+            const codeLoc = currentJob.codeLoc.find((loc) => loc.AlgType === pool.type);
+            const stackLoc = currentJob.stackLoc.find((loc) => loc.AlgType === pool.type);
+            if (codeLoc !== undefined && stackLoc !== undefined) {
+              pool.freeFF(codeLoc.startLoc);
+              pool.freeFF(stackLoc.startLoc);
+              this.log(`${this.time}: Job ${currentJob.id} freed Code at location ${codeLoc}, freed Stack at location ${stackLoc} in ${pool.type} pool`);
+            } else if (codeLoc !== undefined && stackLoc === undefined) {
+              pool.freeFF(codeLoc.startLoc);
+              this.log(`${this.time}: Job ${currentJob.id} freed Code at location ${codeLoc} in ${pool.type} pool`);
+              this.log(`${this.time}: ERROR and Stack for Job ${currentJob.id} in ${pool.type} pool`);
+            } else if (codeLoc === undefined && stackLoc !== undefined) {
+              pool.freeFF(stackLoc.startLoc);
+              this.log(`${this.time}: Job ${currentJob.id} freed Stack at location ${stackLoc} in ${pool.type} pool`);
+              this.log(`${this.time}: ERROR Freeing Code for Job ${currentJob.id} in ${pool.type} pool`);
+            } else {
+              this.log(`${this.time}: ERROR Freeing Code and Stack for Job ${currentJob.id} in ${pool.type} pool`);
+            }
           });
           break;
         }
         case EventType.HeapAllocation: {
           this.memoryPools.forEach((pool) => {
             const heapLoc = pool.handlePoolAllocation(currentHeapEl!.memoryUnits);
-            if (heapLoc) {
+            if (heapLoc !== null) {
               this.jobsQueue[currentJob.id].heapElements[currentHeapEl!.id].HeapLoc.push({AlgType: pool.type, startLoc: heapLoc});
               this.log(`${this.time}: Job ${currentEvent.jobId} allocated Heap El ${currentEvent.heapElementId} at location ${heapLoc} in ${pool.type} pool`);
             } else {
@@ -218,10 +230,14 @@ class MemorySimulation {
         }
         case EventType.HeapTermination: {
            this.memoryPools.forEach((pool) => {
-            const heapLocation = currentHeapEl!.HeapLoc.find((loc) => loc.AlgType == pool.type);
-            pool.freeFF(heapLocation!.startLoc);
-            this.log(`${this.time}: Job ${currentEvent.jobId} freed Heap El at location ${heapLocation} in ${pool.type} pool`);
-          });        
+            const heapLocation = currentHeapEl!.HeapLoc.find((loc) => loc.AlgType === pool.type);
+            if (heapLocation !== undefined) {
+              pool.freeFF(heapLocation.startLoc);
+              this.log(`${this.time}: Job ${currentEvent.jobId} freed Heap El at location ${heapLocation} in ${pool.type} pool`);
+            } else {
+              this.log(`${this.time}: ERROR Terminating heap element #${currentHeapEl?.id} for Job ${currentEvent.jobId}`)
+            }
+          });
           break;
         }
         default:

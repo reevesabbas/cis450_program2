@@ -49,19 +49,21 @@ export class MemoryPool {
     
   }
 
-  public mallocFF(size: number): number | null {
+  public mallocFF(sizeRequested: number): number | null {
     const startingPosition = 0;
     let freeUnitCount = 0;
 
-    for (let i = 0; i < this.memoryBlocks.length; i++) {
-      const memoryBlock = this.memoryBlocks[startingPosition];
+    for (let i = startingPosition; i < this.memoryBlocks.length-1; i++) {
+      const memoryBlock = this.memoryBlocks[i];
       if (memoryBlock.free) {
         freeUnitCount += memoryBlock.size;
-        if (freeUnitCount === size) {
-          for (let i = 0; i < size; i++) {
-            this.memoryBlocks[i].free = false;
+        if (freeUnitCount >= sizeRequested) {
+          const finalBlockLoc = i;
+          const requiredBlocks = Math.ceil(sizeRequested / memoryBlock.size);
+          for (let n = finalBlockLoc; n >= requiredBlocks - (finalBlockLoc+1); n--) {
+            this.memoryBlocks[n].free = false;
           }
-          return i;
+          return i - finalBlockLoc;
         }
       } else {
         freeUnitCount = 0;
@@ -74,8 +76,8 @@ export class MemoryPool {
     const startingPosition = this.nextFitPointer;
     let freeUnitCount = 0;
 
-    for (let i = 0; i < this.memoryBlocks.length; i++) {
-      const memoryBlock = this.memoryBlocks[startingPosition];
+    for (let i = startingPosition; i < this.memoryBlocks.length-1; i++) {
+      const memoryBlock = this.memoryBlocks[i];
       if (memoryBlock.free) {
         freeUnitCount += memoryBlock.size;
         if (freeUnitCount === size) {
