@@ -118,21 +118,20 @@ class MemorySimulation {
     }
   }
 
-  public createEvent(type: EventType, arrivalTime: number, job: Job, heapElement: HeapElement | null) {
+  public createEvent(type: EventType, arrivalTime: number, jobId: number, heapElementId: number | null) {
     const newEvent: Event = {
       type: type,
       arrivalTime: arrivalTime,
-      job: job,
-      heapElement: heapElement,
+      jobId: jobId,
+      heapElementId: heapElementId,
     };
     this.eventsQueue.push(newEvent);
-    this.logEvents(newEvent);
   }
 
   public fillEventQueue(): void {
     this.jobsQueue.forEach((job) => {
       // Create Arrival Event
-      this.createEvent(EventType.Arrival, job.arrivalTime, job, null);
+      this.createEvent(EventType.Arrival, job.arrivalTime, job.id, null);
 
       let heapArrival = job.arrivalTime;
       let heapAllocatedBatchSize = 0;
@@ -142,20 +141,16 @@ class MemorySimulation {
           heapArrival++;
           heapAllocatedBatchSize = 0;
         }
-
         // Schedule Heap Allocation Event
-        this.createEvent(EventType.HeapAllocation, heapArrival, job, heapEl);
+        this.createEvent(EventType.HeapAllocation, heapArrival, job.id, heapEl.id);
 
         const heapTerminationTime = this.GenerateRandomNum(heapArrival + 1, job.arrivalTime + job.runTime - 1);
-
-        this.createEvent(EventType.HeapTermination, heapTerminationTime, job, heapEl);
+        this.createEvent(EventType.HeapTermination, heapTerminationTime, job.id, heapEl.id);
 
         heapAllocatedBatchSize++;
       });
-
-      this.createEvent(EventType.Termination, job.arrivalTime + job.runTime, job, null);
+      this.createEvent(EventType.Termination, job.arrivalTime + job.runTime, job.id, null);
     });
-
     this.eventsQueue.sort((eventA, eventB) => eventA.arrivalTime - eventB.arrivalTime);
   }
 
@@ -169,67 +164,95 @@ class MemorySimulation {
     const WFPool = new MemoryPool(AlgorithmType.WorstFit, this.numberOfUnits, this.memoryUnitSize);
     this.memoryPools.push(FFPool, NFPool, BFPool, WFPool);
 
-    while (this.eventsQueue.length > 0) {
-      let currentEvent: Event = this.eventsQueue.shift()!;
+    //Prefill each pool here.
+    //PreFill Count = 0
+    //While Prefill Count < 2000
+    //Create Job and its Heap Els
+    //Create Events for Job and Heap Els
+    //For Each Memory Pool
+    // Allocate
 
-      switch (currentEvent?.type) {
+    while (this.eventsQueue.length > 0) {
+      const currentEvent: Event = this.eventsQueue.shift()!;
+      const currentJob: Job = this.jobsQueue.find((job) => job.id === currentEvent.jobId)!;
+      const currentHeapEl = currentJob.heapElements.find((heapEl) => heapEl.id === currentEvent.heapElementId);
+
+      switch (currentEvent.type) {
         case EventType.Arrival: {
           this.memoryPools.forEach((pool) => {
-            pool.allocatePool(currentEvent.job.codeSize);
-            pool.allocatePool(currentEvent.job.stackSize);
+            const codeLoc = pool.handlePoolAllocation(currentJob.codeSize);
+            const stackLoc = pool.handlePoolAllocation(currentJob.stackSize);
+            if (codeLoc && stackLoc) {
+              this.jobsQueue[currentJob.id].codeLoc.push({AlgType: pool.type, startLoc: codeLoc});
+              this.jobsQueue[currentJob.id].stackLoc.push({AlgType: pool.type, startLoc: stackLoc});
+              this.log(`${this.time}: Job ${currentJob.id} allocated Code at location ${codeLoc}, allocated Stack at location ${stackLoc} in ${pool.type} pool`);
+            } else if (codeLoc) {
+              this.log(`${this.time}: ERROR ALLOCATING Stack for Job ${currentJob.id} in ${pool.type} pool`);
+            } else {
+              this.log(`${this.time}: ERROR ALLOCATING Code for Job ${currentJob.id} in ${pool.type} pool`);
+            }
           });
           break;
         }
         case EventType.Termination: {
+          this.memoryPools.forEach((pool) => {
+            const codeLoc = currentJob.codeLoc.find((loc) => loc.AlgType == pool.type);
+            const stackLoc = currentJob.stackLoc.find((loc) => loc.AlgType == pool.type);
+            pool.freeFF(codeLoc!.startLoc);
+            pool.freeFF(stackLoc!.startLoc);
+            this.log(`${this.time}: Job ${currentJob.id} freed Code at location ${codeLoc}, freed Stack at location ${stackLoc} in ${pool.type} pool`);
+          });
           break;
         }
         case EventType.HeapAllocation: {
           this.memoryPools.forEach((pool) => {
-            pool.allocatePool(currentEvent.heapElement!.memoryUnits);
+            const heapLoc = pool.handlePoolAllocation(currentHeapEl!.memoryUnits);
+            if (heapLoc) {
+              this.jobsQueue[currentJob.id].heapElements[currentHeapEl!.id].HeapLoc.push({AlgType: pool.type, startLoc: heapLoc});
+              this.log(`${this.time}: Job ${currentEvent.jobId} allocated Heap El ${currentEvent.heapElementId} at location ${heapLoc} in ${pool.type} pool`);
+            } else {
+              this.log(`${this.time}: ERROR ALLOCATING heap elements for ${currentEvent.heapElementId} in ${pool.type} pool`);
+            }
           });
           break;
         }
         case EventType.HeapTermination: {
+           this.memoryPools.forEach((pool) => {
+            const heapLocation = currentHeapEl!.HeapLoc.find((loc) => loc.AlgType == pool.type);
+            pool.freeFF(heapLocation!.startLoc);
+            this.log(`${this.time}: Job ${currentEvent.jobId} freed Heap El at location ${heapLocation} in ${pool.type} pool`);
+          });        
           break;
         }
         default:
+          this.log(`${this.time}: ERROR handling Event`);
           break;
       }
-      //Track statistics?
+      //Update statistics for each pool here.
       this.simClock++;
     }
 
+    //End of loop, log each pool stats here.
     console.log(this.eventsQueue);
-  }
-
-  public logEvents(event: Event) {
-    this.log(`${event.type} Event`);
-    this.log(`Arrival Time at ${event.arrivalTime} for Job ${event.job.id}`);
-    this.log(`Run Time: ${event.heapElement?.heapLifeTime ?? event.job.runTime}`);
-    this.log(`Job Stack Size: ${event.job.stackSize}`);
-    this.log(`Job Code Size: ${event.job.codeSize}`);
-    this.log(`Heap Memory Size: ${event.heapElement?.heapMemorySize}`);
-    this.log(`Heap Memory Units: ${event.heapElement?.memoryUnits}`);
-    this.log(`-----------------------------------`);
   }
 
   public log(message: string): void {
     this.logLines.push(message);
   }
 
-  public logStatistics(memBlock: MemoryPool) {
+  public logStatistics(memoryPool: MemoryPool) {
     let totalMem: number = this.numberOfUnits * this.memoryUnitSize;
-    let totalMemUsage: number = (memBlock.allocatedMemoryUnits / totalMem) * 100;
+    let totalMemUsage: number = (memoryPool.allocatedMemoryUnits / totalMem) * 100;
 
-    this.log(`${memBlock.type} MemBlock`);
+    this.log(`${memoryPool.type} Pool`);
     this.log(`Number of Small Jobs: ${this.statsSmallJob}`);
     this.log(`Number of Medium Jobs: ${this.statsMediumJob}`);
     this.log(`Number of Large Jobs: ${this.statsLargeJob}`);
     this.log(`Total Memory Defined: ${this.numberOfUnits * this.memoryUnitSize}`);
-    this.log(`Total Memory Allocated: ${memBlock.allocatedMemoryUnits}`);
+    this.log(`Total Memory Allocated: ${memoryPool.allocatedMemoryUnits}`);
     this.log(`Percentage Memory Use: ${totalMemUsage}`);
-    this.log(`Total Internal Fragmentation: ${memBlock.internalFragmentation}`);
-    this.log(`Total External Fragmentation: ${memBlock.externalFragmentation}`);
+    this.log(`Total Internal Fragmentation: ${memoryPool.internalFragmentation}`);
+    this.log(`Total External Fragmentation: ${memoryPool.externalFragmentation}`);
     this.log(`-----------------------------------`);
   }
 }

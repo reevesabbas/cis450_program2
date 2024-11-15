@@ -27,25 +27,26 @@ export class MemoryPool {
     }
   }
 
-  public allocatePool(size: number): void {
+  public handlePoolAllocation(size: number): number | null {
     switch (this.type) {
       case AlgorithmType.FirstFit: {
-        this.mallocFF(size);
-        break;
+        return this.mallocFF(size);
       }
       case AlgorithmType.NextFit: {
-        this.mallocNF(size);
-        break;
+        return this.mallocNF(size);
       }
       case AlgorithmType.BestFit: {
-        this.mallocBF(size);
-        break;
+        return this.mallocBF(size);
       }
       case AlgorithmType.WorstFit: {
-        this.mallocWF(size);
-        break;
+        return this.mallocWF(size);
       }
+      default: return null //Error with pool structure?
     }
+  }
+
+  public freeFF(location: number): void {
+    
   }
 
   public mallocFF(size: number): number | null {

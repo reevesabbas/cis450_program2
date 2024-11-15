@@ -9,7 +9,7 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
-    "module": "esnext",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -17,7 +17,7 @@
     "jsx": "react-jsx",
     "strictPropertyInitialization": false,
     "downlevelIteration": true,
-    "sourceMap": true
+    "sourceMap": true,
   },
   "include": ["src"]
 }

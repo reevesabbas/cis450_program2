@@ -20,7 +20,6 @@ export enum AlgorithmType {
 export interface Location {
   AlgType: AlgorithmType;
   startLoc: number;
-  endLoc: number;
 }
 
 export enum EventType {
@@ -32,9 +31,9 @@ export enum EventType {
 
 export interface Event {
   type: EventType;
-  job: Job;
+  jobId: number;
   arrivalTime: number;
-  heapElement: HeapElement | null;
+  heapElementId: number | null;
 }
 
 export interface HeapElement {
