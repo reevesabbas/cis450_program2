@@ -170,6 +170,7 @@ class MemorySimulation {
 
   public logStatistics(memoryPool: MemoryPool) {
     let totalMem: number = this.numberOfUnits * this.memoryUnitSize;
+    let internalFrag : number = memoryPool.allocatedMemoryUnits - memoryPool.requiredMemoryUnits;
     let totalMemUsage: number = (memoryPool.allocatedMemoryUnits / totalMem) * 100;
     const FinalMap : Map<number,number> = memoryPool.GenerateMap();
     let externalFragmentation: number = FinalMap.size;
@@ -195,7 +196,7 @@ class MemorySimulation {
     this.log(`Total Memory Defined: ${this.numberOfUnits * this.memoryUnitSize}`);
     this.log(`Total Memory Allocated: ${memoryPool.allocatedMemoryUnits}`);
     this.log(`Percentage Memory Use: ${totalMemUsage}`);
-    this.log(`Total Internal Fragmentation: ${memoryPool.totalInternalFragmentation}`);
+    this.log(`Total Internal Fragmentation: ${internalFrag}`);
     this.log(`Total External Fragmentation: ${externalFragmentation}`);
     this.log(`Smallest Free Space: ${smallestFree}`);
     this.log(`Largest Free Space: ${largestFree}`);

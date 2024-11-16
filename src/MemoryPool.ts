@@ -83,7 +83,9 @@ export class MemoryPool {
   public mallocNF(sizeRequested: number): number | null {
     let TempMap : Map<number,number> = this.GenerateMap();
     this.requiredMemoryUnits += sizeRequested;
-
+    if (this.nextFitPointer >= this.memoryBlocks.length) {
+      this.nextFitPointer = 0;
+    }
     for (const [startLocation, blockSize] of TempMap.entries()) {
       this.AlgorithmOperations++;
       if (blockSize >= sizeRequested && startLocation >= this.nextFitPointer) {
