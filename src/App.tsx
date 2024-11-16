@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { MemorySimulation } from "./Simulator";
 
 
@@ -13,7 +13,7 @@ function App() {
   const [showLogError, setShowLogError] = useState(false);
   const [simulation, setSimulation] = useState<MemorySimulation | null>(null);
   
-  const startSimulation = (smallJobNum: number, mediumJobNum: number, largeJobNum: number, memoryUnitSize: number, numberOfUnits: number, lostObjects: boolean, callBackFn: Function): void => {
+  const startSimulation = (smallJobNum: number, mediumJobNum: number, largeJobNum: number, memoryUnitSize: number, numberOfUnits: number, lostObjects: boolean): void => {
     const newSimulation = new MemorySimulation(smallJobNum, mediumJobNum, largeJobNum, memoryUnitSize, numberOfUnits, lostObjects);
     if ((smallJobNum + mediumJobNum + largeJobNum) !== 100) {
       setShowLogError(true);
@@ -23,14 +23,28 @@ function App() {
       setShowLogError(true);
       return;
     }
+    else if (!numberOfUnits || numberOfUnits === 0) {
+      setShowLogError(true);
+      return;
+    }
     else {
       setShowLogError(false);
     }
 
     newSimulation.startSimulation();
     setSimulation(newSimulation);
-    callBackFn();
   };
+
+  useEffect(() => {
+    if (simulation !== null) {
+      const output = simulation!.logLines.join("\r\n");
+      const element = document.createElement("a");
+      const file = new Blob([output], { type: "text/plain" });
+      element.href = URL.createObjectURL(file);
+      element.download = testName;
+      element.click();
+    }
+  }, [simulation])
 
   return (
     <div className="flex-1 h-screen w-screen place-content-center bg-[#0c1227]">
@@ -122,7 +136,7 @@ function App() {
               <label className="text-white">Test Name</label>
               <input
                 onChange={(event) => {
-                  setTestName(event.target.value);
+                  setTestName(`${event.target.value}.txt`);
                 }}
                 className="bg-[#fdfdff] rounded-sm"
                 name={"TestNameInput"}
@@ -134,16 +148,7 @@ function App() {
             <button
               className="bg-white p-1 rounded-sm"
               onClick={() => {
-                startSimulation(smallJobNum, mediumJobNum, LargeJobNum, memoryUnitSize, numberOfUnits, lostObjects, () => {
-                  if (simulation !== null) {
-                    const output = simulation!.logLines.join("\r\n");
-                    const element = document.createElement("a");
-                    const file = new Blob([output], { type: "text/plain" });
-                    element.href = URL.createObjectURL(file);
-                    element.download = testName;
-                    element.click();
-                  }
-                });
+                startSimulation(smallJobNum, mediumJobNum, LargeJobNum, memoryUnitSize, numberOfUnits, lostObjects);
               }}
             >
             Run Simulation
