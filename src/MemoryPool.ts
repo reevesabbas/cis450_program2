@@ -36,10 +36,10 @@ export class MemoryPool {
 
     var tempLocation = location;
 
-    while(numOfBlocks > 0) {
+    while(numOfBlocks > 0 && tempLocation < this.memoryBlocks.length) {
       this.memoryBlocks[tempLocation].free = true;
-      tempLocation++;
       numOfBlocks--;
+      tempLocation++;
     }
 
   }

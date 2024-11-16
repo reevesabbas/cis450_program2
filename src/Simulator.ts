@@ -94,21 +94,21 @@ class MemorySimulation {
       switch (type) {
         case JobType.Small: {
           const newJob = this.createJob(type, arrival);
-          this.HeapGenerator(newJob, newJob.runTime * 5);
+          this.HeapGenerator(newJob, newJob.runTime * 50);
           this.jobsQueue.push(newJob);
           this.statsSmallJob++;
           break;
         }
         case JobType.Medium: {
           const newJob = this.createJob(type, arrival);
-          this.HeapGenerator(newJob, newJob.runTime * 10);
+          this.HeapGenerator(newJob, newJob.runTime * 100);
           this.jobsQueue.push(newJob);
           this.statsMediumJob++;
           break;
         }
         case JobType.Large: {
           const newJob = this.createJob(type, arrival);
-          this.HeapGenerator(newJob, newJob.runTime * 25);
+          this.HeapGenerator(newJob, newJob.runTime * 250);
           this.jobsQueue.push(newJob);
           this.statsLargeJob++;
           break;
@@ -220,7 +220,7 @@ class MemorySimulation {
 
     var statisticBatchSize = 0;
 
-    while (this.eventsQueue.length > 0) {
+    while (this.eventsQueue.length > 0 && this.time <= 10000) {
       const currentEvent: Event = this.eventsQueue.shift()!;
       const currentJob: Job = this.jobsQueue.find((job) => job.id === currentEvent.jobId)!;
       const currentHeapEl = currentJob.heapElements.find((heapEl) => heapEl.id === currentEvent.heapElementId);
