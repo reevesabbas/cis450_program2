@@ -1,21 +1,26 @@
-import { memo, useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { MemorySimulation } from "./Simulator";
 
+
 function App() {
-  const [jobAllocation, setJobAllocation] = useState("");
+  const [smallJobNum, setSmallJobNum] = useState(0);
+  const [mediumJobNum, setMediumJobNum] = useState(0);
+  const [LargeJobNum, setLargeJobNum] = useState(0);
   const [memoryUnitSize, setMemoryUnitSize] = useState(0);
   const [numberOfUnits, setNumberOfUnits] = useState(0);
   const [lostObjects, setLostObjects] = useState(false);
   const [testName, setTestName] = useState("");
-  const [completedInput, setCompletedInput] = useState(false);
+  const [errorLogs, setErrorLogs] = useState<Array<string>>([]);
   const [simulation, setSimulation] = useState<MemorySimulation | null>(null);
-
-  const startSimulation = (jobAllocation: string, memoryUnitSize: number, numberOfUnits: number, lostObjects: boolean, callBackFn: Function): void => {
-    const jobAllocations = jobAllocation.trim().split("\n");
-    const smallJobPercentage = parseInt(jobAllocations.shift()!);
-    const mediumJobPercentage = parseInt(jobAllocations.shift()!);
-    const largeJobPercentage = parseInt(jobAllocations.shift()!);
-    const newSimulation = new MemorySimulation(smallJobPercentage, mediumJobPercentage, largeJobPercentage, memoryUnitSize, numberOfUnits, lostObjects);
+  
+  const logInputErrors = () => {
+    errorLogs.forEach(error => {
+      
+    });
+  }
+  
+  const startSimulation = (smallJobNum: number, mediumJobNum: number, largeJobNum: number, memoryUnitSize: number, numberOfUnits: number, lostObjects: boolean, callBackFn: Function): void => {
+    const newSimulation = new MemorySimulation(smallJobNum, mediumJobNum, largeJobNum, memoryUnitSize, numberOfUnits, lostObjects);
     newSimulation.startSimulation();
     setSimulation(newSimulation);
     callBackFn();
@@ -26,14 +31,40 @@ function App() {
       <h1 className="text-white text-center text-2xl mb-20">Welcome to Assignment 2 CIS 450</h1>
       <div className="flex justify-center">
         <div className="flex-col col-span-1 space-y-5">
+          
           <div className="flex flex-col col-span-1">
-            <label className="text-white">Enter Job Allocations</label>
-            <textarea
+            <label className="text-white">Enter Percentage of Small Jobs</label>
+            <input
               onChange={(event) => {
-                setJobAllocation(event.target.value);
+                setSmallJobNum(parseInt(event.target.value));
               }}
-              className="bg-[#fdfdff] rounded-sm h-24 w-100"
-              name={"JobAllocationInput"}
+              className="bg-[#fdfdff] rounded-sm"
+              name={"SmallJobPercentage"}
+              type="number"
+              required
+            />
+          </div>
+          <div className="flex flex-col col-span-1">
+            <label className="text-white">Enter Percentage of Medium Jobs</label>
+            <input
+              onChange={(event) => {
+                setMediumJobNum(parseInt(event.target.value));
+              }}
+              className="bg-[#fdfdff] rounded-sm"
+              name={"MediumJobPercentage"}
+              type="number"
+              required
+            />
+          </div>
+          <div className="flex flex-col col-span-1">
+            <label className="text-white">Enter Percentage of Large Jobs</label>
+            <input
+              onChange={(event) => {
+                setLargeJobNum(parseInt(event.target.value));
+              }}
+              className="bg-[#fdfdff] rounded-sm"
+              name={"LargeJobPercentage"}
+              type="number"
               required
             />
           </div>
@@ -90,7 +121,7 @@ function App() {
             <button
               className="bg-white p-1 rounded-sm"
               onClick={() => {
-                startSimulation(jobAllocation, memoryUnitSize, numberOfUnits, lostObjects, () => {
+                startSimulation(smallJobNum, mediumJobNum, LargeJobNum, memoryUnitSize, numberOfUnits, lostObjects, () => {
                   if (simulation !== null) {
                     const output = simulation!.logLines.join("\r\n");
                     const element = document.createElement("a");

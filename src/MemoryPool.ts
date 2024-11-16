@@ -23,7 +23,6 @@ export class MemoryPool {
 
     for (var i = 0; i < this.totalMemoryUnits; i++) {
       var newBlock: MemoryBlock = {
-        allocatedSize: 0,
         size: memoryUnitSize,
         free: true,
       };
@@ -31,7 +30,19 @@ export class MemoryPool {
     }
   }
 
-  public freeFF(location: number): void {}
+  public freeFF(location: number, size: number): void {
+    var startBlock = this.memoryBlocks[location];
+    var numOfBlocks = size / startBlock.size;
+
+    var tempLocation = location;
+
+    while(numOfBlocks > 0) {
+      this.memoryBlocks[tempLocation].free = true;
+      tempLocation++;
+      numOfBlocks--;
+    }
+
+  }
 
   public handlePoolAllocation(size: number): number | null {
     switch (this.type) {
@@ -80,7 +91,7 @@ export class MemoryPool {
         this.allocatedMemoryUnits += allocSize;
         this.nextFitPointer = startLocation;
         let i: number = this.nextFitPointer;
-        let tempSize : number = allocSize
+        let tempSize : number = allocSize;
         while (tempSize > 0) {
           this.memoryBlocks[i].free = false;
           tempSize -= this.memUnitSize;
@@ -146,6 +157,7 @@ export class MemoryPool {
       this.failedAllocations++;
       return null;}
   }
+
   public mallocBF(sizeRequested: number): number | null {
     let TempMap : Map<number,number> = this.GenerateMap();
     this.requiredMemoryUnits += sizeRequested;

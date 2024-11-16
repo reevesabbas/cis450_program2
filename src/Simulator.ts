@@ -53,12 +53,16 @@ class MemorySimulation {
     }
   }
 
-  public createJob(type: JobType, code: number, stack: number, runTime: number, arrivalTime: number): Job {
+  public createJob(type: JobType, arrivalTime: number): Job {
+    const runTime = this.GenerateRandomNum(type === JobType.Small ? 4 : type === JobType.Medium ? 9 : 24, type === JobType.Small ? 6 : type === JobType.Medium ? 11 : 26);
+    const codeSize = this.GenerateRandomNum(type === JobType.Small ? 40 : type === JobType.Medium ? 60 : 120, type === JobType.Small ? 120 : type === JobType.Medium ? 160 : 220);
+    const stackSize = this.GenerateRandomNum(type === JobType.Small ? 20 : type === JobType.Medium ? 40 : 60, type === JobType.Small ? 40 : type === JobType.Medium ? 80 : 120);
+
     const newJob: Job = {
       id: this.totalNumOfJobs,
       type: type,
-      codeSize: code,
-      stackSize: stack,
+      codeSize: codeSize,
+      stackSize: stackSize,
       runTime: runTime,
       arrivalTime: arrivalTime,
       heapElements: [],
@@ -75,37 +79,36 @@ class MemorySimulation {
     let currentNum: number = this.GenerateRandomNum(1, 100);
 
     if (currentNum <= smallInterval) {
-      return "SMALL";
+      return JobType.Small;
     } else if (currentNum <= mediumInterval) {
-      return "MEDIUM";
+      return JobType.Medium;
     } else {
-      return "LARGE";
+      return JobType.Large;
     }
   }
 
   public fillSimulationJobs(): void {
-    let i: number;
     let arrival: number = 0;
     while (arrival < 100) {
-      let type: string = this.GenerateRandJobType();
+      let type: JobType = this.GenerateRandJobType();
       switch (type) {
         case JobType.Small: {
-          const newJob = this.createJob(type, this.GenerateRandomNum(40, 80), this.GenerateRandomNum(20, 40), this.GenerateRandomNum(4, 6), arrival);
+          const newJob = this.createJob(type, arrival);
           this.HeapGenerator(newJob, newJob.runTime * 5);
           this.jobsQueue.push(newJob);
           this.statsSmallJob++;
           break;
         }
         case JobType.Medium: {
-          const newJob = this.createJob(type, this.GenerateRandomNum(60, 120), this.GenerateRandomNum(40, 80), this.GenerateRandomNum(9, 11), arrival);
+          const newJob = this.createJob(type, arrival);
           this.HeapGenerator(newJob, newJob.runTime * 10);
           this.jobsQueue.push(newJob);
           this.statsMediumJob++;
           break;
         }
         case JobType.Large: {
-          const newJob = this.createJob(type, this.GenerateRandomNum(120, 220), this.GenerateRandomNum(60, 120), this.GenerateRandomNum(24, 26), arrival);
-          this.HeapGenerator(newJob, newJob.runTime * 15);
+          const newJob = this.createJob(type, arrival);
+          this.HeapGenerator(newJob, newJob.runTime * 25);
           this.jobsQueue.push(newJob);
           this.statsLargeJob++;
           break;
@@ -153,6 +156,18 @@ class MemorySimulation {
     });
     this.eventsQueue.sort((eventA, eventB) => eventA.arrivalTime - eventB.arrivalTime);
   }
+
+  public logInputs() {
+    this.log(`---------- INPUTS ----------`);
+    this.log(`Small Job %: ${this.smallJobPercentage}%`);
+    this.log(`Med Job %: ${this.mediumJobPercentage}%`);
+    this.log(`Large Job %: ${this.largeJobPercentage}%`);
+    this.log(`Memory Unit Size: ${this.memoryUnitSize}`);
+    this.log(`Total Memory Units: ${this.numberOfUnits}`);
+    this.log(`Allow Lost Objects: ${this.includeLostObjects}`);
+    this.log(`-----------------------------`);
+  }
+
   public logStatistics(memoryPool: MemoryPool) {
     let totalMem: number = this.numberOfUnits * this.memoryUnitSize;
     let totalMemUsage: number = (memoryPool.allocatedMemoryUnits / totalMem) * 100;
@@ -162,16 +177,16 @@ class MemorySimulation {
     let largestFree = -Infinity; // Start with an infinitely large value
     
     for (const value of FinalMap.values()) {
-        if (value < smallestFree) {
-    smallestFree = value;
-  }
-}
+      if (value < smallestFree) {
+      smallestFree = value;
+      }
+    }
 
-  for (const value of FinalMap.values()) {
-    if (value > largestFree) {
-      largestFree = value;
-}
-}
+    for (const value of FinalMap.values()) {
+      if (value > largestFree) {
+        largestFree = value;
+      }
+    }
 
     this.log(`${memoryPool.type} Pool`);
     this.log(`Number of Small Jobs: ${this.statsSmallJob}`);
@@ -188,7 +203,9 @@ class MemorySimulation {
     this.log(`Algorithm Operations: ${memoryPool.AlgorithmOperations}`);
     this.log(`-----------------------------------`);
   }
+
   public startSimulation(): void {
+    this.logInputs();
     this.fillSimulationJobs();
     this.fillEventQueue();
 
@@ -198,18 +215,22 @@ class MemorySimulation {
     const WFPool = new MemoryPool(AlgorithmType.WorstFit, this.numberOfUnits, this.memoryUnitSize);
     this.memoryPools.push(FFPool, NFPool, BFPool, WFPool);
 
-    //Prefill each pool here.
-    //PreFill Count = 0
-    //While Prefill Count < 2000
-    //Create Job and its Heap Els
-    //Create Events for Job and Heap Els
-    //For Each Memory Pool
-    // Allocate
+    //Prefill Memory for 2000 time units.
+    //this.preFillMemory();
+
+    var statisticBatchSize = 0;
 
     while (this.eventsQueue.length > 0) {
       const currentEvent: Event = this.eventsQueue.shift()!;
       const currentJob: Job = this.jobsQueue.find((job) => job.id === currentEvent.jobId)!;
       const currentHeapEl = currentJob.heapElements.find((heapEl) => heapEl.id === currentEvent.heapElementId);
+
+      if (statisticBatchSize === 20) {
+        statisticBatchSize = 0;
+         this.memoryPools.forEach((pool) => {
+          this.logStatistics(pool);
+        });
+      }
 
       switch (currentEvent.type) {
         case EventType.Arrival: {
@@ -233,16 +254,16 @@ class MemorySimulation {
             const codeLoc = currentJob.codeLoc.find((loc) => loc.AlgType === pool.type);
             const stackLoc = currentJob.stackLoc.find((loc) => loc.AlgType === pool.type);
             if (codeLoc !== undefined && stackLoc !== undefined) {
-              pool.freeFF(codeLoc.startLoc);
-              pool.freeFF(stackLoc.startLoc);
-              this.log(`${this.time}: Job ${currentJob.id} freed Code at location ${codeLoc}, freed Stack at location ${stackLoc} in ${pool.type} pool`);
+              pool.freeFF(codeLoc.startLoc, currentJob.codeSize);
+              pool.freeFF(stackLoc.startLoc, currentJob.stackSize);
+              this.log(`${this.time}: Job ${currentJob.id} freed Code at location ${codeLoc.startLoc}, freed Stack at location ${stackLoc.startLoc} in ${pool.type} pool`);
             } else if (codeLoc !== undefined && stackLoc === undefined) {
-              pool.freeFF(codeLoc.startLoc);
-              this.log(`${this.time}: Job ${currentJob.id} freed Code at location ${codeLoc} in ${pool.type} pool`);
+              pool.freeFF(codeLoc.startLoc, currentJob.codeSize);
+              this.log(`${this.time}: Job ${currentJob.id} freed Code at location ${codeLoc.startLoc} in ${pool.type} pool`);
               this.log(`${this.time}: ERROR and Stack for Job ${currentJob.id} in ${pool.type} pool`);
             } else if (codeLoc === undefined && stackLoc !== undefined) {
-              pool.freeFF(stackLoc.startLoc);
-              this.log(`${this.time}: Job ${currentJob.id} freed Stack at location ${stackLoc} in ${pool.type} pool`);
+              pool.freeFF(stackLoc.startLoc, currentJob.stackSize);
+              this.log(`${this.time}: Job ${currentJob.id} freed Stack at location ${stackLoc.startLoc} in ${pool.type} pool`);
               this.log(`${this.time}: ERROR Freeing Code for Job ${currentJob.id} in ${pool.type} pool`);
             } else {
               this.log(`${this.time}: ERROR Freeing Code and Stack for Job ${currentJob.id} in ${pool.type} pool`);
@@ -255,9 +276,9 @@ class MemorySimulation {
             const heapLoc = pool.handlePoolAllocation(currentHeapEl!.memoryUnits);
             if (heapLoc !== null) {
               this.jobsQueue[currentJob.id].heapElements[currentHeapEl!.id].HeapLoc.push({AlgType: pool.type, startLoc: heapLoc});
-              this.log(`${this.time}: Job ${currentEvent.jobId} allocated Heap El ${currentEvent.heapElementId} at location ${heapLoc} in ${pool.type} pool`);
+              this.log(`${this.time}: Job ${currentEvent.jobId} allocated Heap El #${currentEvent.heapElementId} at location ${heapLoc} in ${pool.type} pool`);
             } else {
-              this.log(`${this.time}: ERROR ALLOCATING heap elements for ${currentEvent.heapElementId} in ${pool.type} pool`);
+              this.log(`${this.time}: ERROR ALLOCATING heap element #${currentEvent.heapElementId} in ${pool.type} pool`);
             }
           });
           break;
@@ -266,8 +287,8 @@ class MemorySimulation {
            this.memoryPools.forEach((pool) => {
             const heapLocation = currentHeapEl!.HeapLoc.find((loc) => loc.AlgType === pool.type);
             if (heapLocation !== undefined) {
-              pool.freeFF(heapLocation.startLoc);
-              this.log(`${this.time}: Job ${currentEvent.jobId} freed Heap El at location ${heapLocation} in ${pool.type} pool`);
+              pool.freeFF(heapLocation.startLoc, currentHeapEl!.heapMemorySize);
+              this.log(`${this.time}: Job ${currentEvent.jobId} freed Heap El #${currentHeapEl?.id} at location ${heapLocation.startLoc} in ${pool.type} pool`);
             } else {
               this.log(`${this.time}: ERROR Terminating heap element #${currentHeapEl?.id} for Job ${currentEvent.jobId}`)
             }
@@ -279,13 +300,47 @@ class MemorySimulation {
           break;
       }
       //Update statistics for each pool here.
-      this.simClock++;
+      this.time++;
+      statisticBatchSize++;
     }
 
     //End of loop, log each pool stats here.
     this.memoryPools.forEach((pool) => {
       this.logStatistics(pool);
     });
+  }
+
+  private preFillMemory() {
+    //Prefill each pool here.
+    var preFillCount = 0;
+    while (preFillCount < this.preFillTime) {
+      let type: JobType = this.GenerateRandJobType();
+      const newJob = this.createJob(type, preFillCount);
+      this.memoryPools.forEach(pool => {
+       switch(pool.type) {
+        case AlgorithmType.FirstFit: {
+          pool.mallocFF(newJob.codeSize);
+          pool.mallocFF(newJob.stackSize);
+          break;  
+        }
+        case AlgorithmType.NextFit: {
+          pool.mallocNF(newJob.codeSize);
+          pool.mallocNF(newJob.stackSize);
+          break;
+        }
+         case AlgorithmType.BestFit: {
+          pool.mallocBF(newJob.codeSize);
+          pool.mallocBF(newJob.stackSize);
+          break;  
+        }
+          case AlgorithmType.WorstFit: {
+          pool.mallocWF(newJob.codeSize);
+          pool.mallocWF(newJob.stackSize);
+        }    
+       }
+      });
+      preFillCount += this.GenerateRandomNum(1, 5);
+    }
   }
 
   public log(message: string): void {

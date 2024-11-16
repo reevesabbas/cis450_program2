@@ -59,6 +59,5 @@ export interface Job {
 
 export interface MemoryBlock {
   size: number;
-  allocatedSize: number;
   free: boolean;
 }
