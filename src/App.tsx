@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { MemorySimulation } from "./Simulator";
 
 
@@ -10,28 +10,55 @@ function App() {
   const [numberOfUnits, setNumberOfUnits] = useState(0);
   const [lostObjects, setLostObjects] = useState(false);
   const [testName, setTestName] = useState("");
-  const [errorLogs, setErrorLogs] = useState<Array<string>>([]);
+  const [showLogError, setShowLogError] = useState(false);
   const [simulation, setSimulation] = useState<MemorySimulation | null>(null);
   
-  const logInputErrors = () => {
-    errorLogs.forEach(error => {
-      
-    });
-  }
-  
-  const startSimulation = (smallJobNum: number, mediumJobNum: number, largeJobNum: number, memoryUnitSize: number, numberOfUnits: number, lostObjects: boolean, callBackFn: Function): void => {
+  const startSimulation = (smallJobNum: number, mediumJobNum: number, largeJobNum: number, memoryUnitSize: number, numberOfUnits: number, lostObjects: boolean): void => {
     const newSimulation = new MemorySimulation(smallJobNum, mediumJobNum, largeJobNum, memoryUnitSize, numberOfUnits, lostObjects);
+    if ((smallJobNum + mediumJobNum + largeJobNum) !== 100) {
+      setShowLogError(true);
+      return;
+    }
+    else if (memoryUnitSize % 8 !== 0) {
+      setShowLogError(true);
+      return;
+    }
+    else if (!numberOfUnits || numberOfUnits === 0) {
+      setShowLogError(true);
+      return;
+    }
+    else {
+      setShowLogError(false);
+    }
+
     newSimulation.startSimulation();
     setSimulation(newSimulation);
-    callBackFn();
   };
+
+  useEffect(() => {
+    if (simulation !== null) {
+      const output = simulation!.logLines.join("\r\n");
+      const element = document.createElement("a");
+      const file = new Blob([output], { type: "text/plain" });
+      element.href = URL.createObjectURL(file);
+      element.download = testName;
+      element.click();
+    }
+  }, [simulation])
 
   return (
     <div className="flex-1 h-screen w-screen place-content-center bg-[#0c1227]">
-      <h1 className="text-white text-center text-2xl mb-20">Welcome to Assignment 2 CIS 450</h1>
+      <h1 className="text-white text-center text-2xl mb-10">Welcome to Assignment 2 CIS 450</h1>
       <div className="flex justify-center">
-        <div className="flex-col col-span-1 space-y-5">
-          
+        <div className="flex-col col-span-1 space-y-5"> 
+          { showLogError &&
+            <div className="flex flex-col col-span-1 text-center">
+              <span className="text-red-500 text-lg">ERROR: VERIFY INPUT CRITERIA</span>
+            </div>
+          }
+            <div className="flex flex-col col-span-1 text-center">
+              <span className="text-blue-400 text-lg">PERCENTAGES MUST ADD UP TO 100</span>
+            </div>
           <div className="flex flex-col col-span-1">
             <label className="text-white">Enter Percentage of Small Jobs</label>
             <input
@@ -109,7 +136,7 @@ function App() {
               <label className="text-white">Test Name</label>
               <input
                 onChange={(event) => {
-                  setTestName(event.target.value);
+                  setTestName(`${event.target.value}.txt`);
                 }}
                 className="bg-[#fdfdff] rounded-sm"
                 name={"TestNameInput"}
@@ -121,16 +148,7 @@ function App() {
             <button
               className="bg-white p-1 rounded-sm"
               onClick={() => {
-                startSimulation(smallJobNum, mediumJobNum, LargeJobNum, memoryUnitSize, numberOfUnits, lostObjects, () => {
-                  if (simulation !== null) {
-                    const output = simulation!.logLines.join("\r\n");
-                    const element = document.createElement("a");
-                    const file = new Blob([output], { type: "text/plain" });
-                    element.href = URL.createObjectURL(file);
-                    element.download = testName;
-                    element.click();
-                  }
-                });
+                startSimulation(smallJobNum, mediumJobNum, LargeJobNum, memoryUnitSize, numberOfUnits, lostObjects);
               }}
             >
             Run Simulation

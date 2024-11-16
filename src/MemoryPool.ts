@@ -157,7 +157,8 @@ export class MemoryPool {
     }
     else {
       this.failedAllocations++;
-      return null;}
+      return null;
+    }
   }
 
   public mallocBF(sizeRequested: number): number | null {
